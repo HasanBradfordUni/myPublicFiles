@@ -1,0 +1,27 @@
+Full list of planned AI apps coming soon...
+
+1. AI Video Generator: Long term project where user will provide Media (Audio, Video, Pictures, etc) and AI will edit it into a video based on the user's description. It will also be able to generate it's own media for use in the generated video as per user discretion.
+2. WhatsApp AI call bot: A bot that can be invited to and join WhatsApp group calls... can talk and respond as well.
+3. AI Pack Rating System: This project involves developing an application with a Python backend and a web-based frontend. The application will allow users to upload one or more screenshots of a pack from the game EA Sports FC or FIFA. Users will also be able to select the type of pack from a dropdown menu. The uploaded screenshots and selected pack type will then be processed by an AI, implemented in the Python backend, which will analyse the screenshots to generate a rating for the pack. 
+The rating will be calculated based on the average price of cards typically found in that type of pack, as well as the current prices of the specific cards in the uploaded screenshots. These prices will be dynamically retrieved using an API that accesses live data from the transfer market, reflecting real-time changes in card values. Once the analysis is complete, the application will display the pack rating as a percentage to the user.
+4. AI Trading Tool: A tool that I can sell that can help with trading stocks and shares
+THE FOLLOWING APPS WILL ALL BE PART OF THE AI APPS COLLECTION (HOPEFULLY, INSHA'ALLAH)
+5. General AI document search (developed with vertex AI)
+6. AI testing agent (general purpose)
+7. AI version of Work Hours calculator
+8. AI document extractor and converter
+9. General AI chatbot (tie all apps together)
+10. AI cover letter generator - different versions
+11. AI job ad writer
+12. AI Speech to text app (for like meetings and stuff, inc voice commands) 
+13. AI scheduling & calendar management system
+14. General document summarisation AI
+15. Documents Directory AI summariser (with specific customisations)
+16. AI programming assistant
+
+THAT IS ALL FOR NOW, quite a lot I know but hopefully, Insha'Allah we will have time to do all
+----------------------------------------------------------------------------------------------
+FILE INFORMATION
+
+First created: 16/10/24
+Last updated: 16/10/24
