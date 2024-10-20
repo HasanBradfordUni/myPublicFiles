@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Smart Life - Register</title>
+        <link rel="stylesheet" href="../CSS/Styles.css">
+        <link rel="stylesheet" href="../CSS/registerPageStyles.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="../JavaScript/basicJs.js"></script>
+    </head>
+
+    <body>
+        <header>
+            <h1>
+                <img src="Images/logo.png" alt="The logo for this website" width="50" height="50" class="logo">
+                Smart Life
+                <img src="Images/logo.png" alt="The logo for this website" width="50" height="50" class="logo">
+            </h1><hr>
+    
+            <div class="menuBar">
+                <ul class="nav">
+                    <li class="nav" id="currentPage"><a class="nav" href="index.html">Home</a></li>
+                    <li class="nav"><a class="nav" href="about.html">About</a></li>
+                    <li class="nav"><a class="nav" href="contact.html">Contact</a></li>
+                    <li class="nav"><a class="nav" href="shop.html">Shop</a></li>
+                </ul>
+                <div class="icons">
+                    <a href="cart.html"> <img src="Images/cart.png" class="cart"> </a>
+                    <a href="login.html"> <img src="Images/account.png" class="account"> </a>
+                </div>
+            </div>
+        </header>
+
+        <section class="mainBody">
+            <h1>Sign up</h1>
+            <br>
+            <h2>Sign-up for a free account today</h2>
+
+            <div class="registerPart">
+                <form class="registerForm" action="../PHP/registerUser.php" method="post">
+                    <br>
+                    <label for="username">Username</label><br>
+                    <input class="fullWidthInput" type="text" name="username" id="username" required placeholder="Enter Username"><br><br>
+                    <label for="emailInput">Email</label><br>
+                    <input class="fullWidthInput" type="email" name="emailInput" id="emailInput" required placeholder="Enter email"><br><br>
+                    <label for="passwordInput">Password</label><br>
+                    <input class="fullWidthInput" type="password" name="passwordInput" id="passwordInput" required placeholder="Enter password"><br><br>
+                    <label for="passwordConfirmation">Password Confirmation</label><br>
+                    <input class="fullWidthInput" type="password" name="passwordConfirmation" id="passwordConfirmation" required placeholder="Enter password again"><br><br>
+                    <button type="submit" class="submitButton">Sign up</button>
+                    <p>Have an account? <a href="login.html">Log in here</a></p>
+                </form>
+                
+            </div>
+            
+        </section>
+        
+    </body>
+</html>

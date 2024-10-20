@@ -1,0 +1,23 @@
+.mainImage {
+    width: 60%;
+    border: solid 5px black;
+}
+
+.productTitle {
+    font-size: xx-large;
+    font-weight: 800;
+    text-decoration: underline;
+    color: blueviolet;
+}
+
+.prodBox {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.prodDetails {
+    display: block;
+    text-align: center;
+    width: 30%;
+    justify-self: right;
+}

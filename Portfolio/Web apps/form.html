@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Student Form</title>
+</head>
+<body>
+    <form action="welcome.php" method="post">
+        <div>
+            <label>First Name</label>
+            <input type="text" name="fname" required><br>
+        </div>
+        <div>
+            <label>Middle Name</label>
+            <input type="text" name="mname"><br> 
+        </div>
+        <div>
+            <label>Surname</label>
+            <input type="text" name="sname" required><br>
+        </div>
+        <label>Gender:</label>
+        <div>
+            <label>Male</label>
+            <input type="radio" name="gender"><br>
+        </div>
+        <div>
+            <label>Female</label>
+            <input type="radio" name="gender"><br>
+        </div>
+        <label for="addressArea">Address:</label><br>
+        <textarea id="addressArea" name="addressArea" rows="6" cols="100" required>Enter your address here:</textarea><br>
+        <div>
+            <label>Phone No.</label>
+            <input type="number" width="11" name="phoneNum" required><br>
+        </div>
+        <div>
+            <label>Email</label>
+            <input type="email" name="email" required><br>
+        </div>
+        <label>Hobbies:</label>
+        <div>
+            <label>Sports</label>
+            <input type="checkbox" name="hobby1">
+        </div>
+        <div>
+            <label>Gaming</label>
+            <input type="checkbox" name="hobby2" >
+        </div>
+        <div>
+            <label>Arts and Crafts</label>
+            <input type="checkbox" name="hobby3" >
+        </div>
+        <div>
+            <label>Submit</label>
+            <input type="submit" name="submitButton">
+        </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Life - Home</title>
+    <link rel="stylesheet" href="../CSS/Styles.css">
+    <link rel="stylesheet" href="../CSS/cartStyles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../JavaScript/basicJs.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>
+            <img src="Images/logo.png" alt="The logo for this website" width="50" height="50" class="logo">
+            Smart Life
+            <img src="Images/logo.png" alt="The logo for this website" width="50" height="50" class="logo">
+        </h1>
+        <hr>
+
+        <div class="menuBar">
+            <ul class="nav">
+                <li class="nav" id="currentPage"><a class="nav" href="index.html">Home</a></li>
+                <li class="nav"><a class="nav" href="about.html">About</a></li>
+                <li class="nav"><a class="nav" href="contact.html">Contact</a></li>
+                <li class="nav"><a class="nav" href="shop.html">Shop</a></li>
+            </ul>
+            <div class="icons">
+                <a href="cart.html"> <img src="Images/cart.png" class="cart"> </a>
+                <a href="login.html"> <img src="Images/account.png" class="account"> </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="mainBody">
+        <div class="productsInCart" id="cartProducts">
+            <table class="cartProds" id="productsTable">
+                <tr>
+                    <th>Product Name</th>
+                    <th>Product Image</th>
+                    <th>Product Price</th>
+                    <th>Delete item</th>
+                </tr>
+                <tr id="row1">
+                    <td>My First Product</td>
+                    <td><img src="" width="100" height="100" alt="Shop Product Image"></td>
+                    <td class="price">£0.00</td>
+                    <td><button class="toProdPage" onclick='deleteItem("row1")'>Delete from Cart</button></td>
+                </tr>
+            </table>
+        </div>
+        <br>
+        <p id="total">TOTAL PRICE: £</p>
+        <button onclick='goToCheckout()' class="toProdPage">Checkout</button>
+    </section>
+
+
+    <script>
+        function goToCheckout() {
+            alert('Checkout is coming soon...');
+        }
+
+        // Delete the selected row
+        function deleteItem(rowId) {
+            // Get the table
+            var table = document.getElementById("productsTable");
+
+            var row = document.getElementById(rowId);
+            // Get the 'price' cell in the row
+            var priceCell = row.getElementsByClassName("price")[0];
+
+            // Check if the 'price' cell exists
+            if (priceCell) {
+                // Get the price as a float
+                var price = parseFloat(priceCell.innerText.replace("£", "0"));
+
+                var newTotal = parseFloat(document.getElementById("total").textContent.substring(14)) - price;
+
+                document.getElementById("total").textContent = "TOTAL PRICE: £" + newTotal;
+            }
+
+            // Remove the row
+            row.remove();
+
+        }
+
+        try {
+            fetch('../PHP/getCartItems.php')
+                .then(response => response.text())
+                .then(data => {
+                    var lines = data.split('\n');
+                    var table = document.getElementById("productsTable");
+                    var rows = table.getElementsByTagName("tr");
+
+                    // Start from the second row (skip the heading row)
+                    for (var i = rows.length - 1; i > 0; i--) {
+                        table.deleteRow(i);
+                    }
+
+                    for (let index = 0; index < lines.length - 1; index++) {
+                        const line = lines[index];
+                        var words = line.split(';');
+                        var newRow = table.insertRow(); // Insert at the last position
+                        newRow.id = "row" + (table.rows.length - 1); // Set the ID for the row
+
+                        var thisProdName = words[0];
+                        var thisProdPrice = words[1];
+                        var thisProdImgSrc = words[2];
+
+                        var cell1 = newRow.insertCell(0); // Insert at the first position
+                        var cell2 = newRow.insertCell(1); // Insert at the second position
+                        var cell3 = newRow.insertCell(2); // Insert at the third position
+                        var cell4 = newRow.insertCell(3); // Insert at the fourth position
+
+                        var thisProdImg = "<img src='" + thisProdImgSrc + "' width='100' height='100' alt='Shop Product Image'>";
+
+                        cell1.innerHTML = thisProdName;
+                        cell2.innerHTML = thisProdImg;
+                        cell3.innerHTML = "£"+thisProdPrice;
+                        cell4.innerHTML = "<button class='toProdPage' onclick=\"deleteItem('" + newRow.id + "')\">Delete from Cart</button>";
+
+                        cell3.classList.add("price"); // Add a class to cell3
+                    }
+
+                    document.getElementById("total").textContent = "TOTAL PRICE: £" + lines[lines.length - 1];
+                });
+        } catch (error) {
+            console.log(error);
+        }
+    </script>
+</body>
+
+</html>

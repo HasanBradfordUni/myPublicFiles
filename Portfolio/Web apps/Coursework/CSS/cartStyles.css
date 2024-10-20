@@ -1,0 +1,25 @@
+.productsInCart {
+    display: block;
+    justify-content: center;
+}
+
+.cartProds {
+    width: 50%;
+    margin: auto;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 3px solid white;
+    text-align: center;
+    padding: 10px;
+  }
+
+#total {
+    text-align: left;
+    font-size: large;
+    font-weight: 500;
+    margin-left: 25%;
+}

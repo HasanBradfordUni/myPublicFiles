@@ -1,0 +1,41 @@
+.aboutIoTimg {
+    width: 50%;
+    height: 50%;
+    border: 5px;
+    border-style: solid;
+    border-color: darkolivegreen;
+}
+
+.howIoTworksImg {
+    width: 75%;
+    height: 75%;
+    border: 5px;
+    border-style: solid;
+    border-color: aliceblue;
+}
+
+.globeIoTimg {
+    width: 80%;
+    height: auto;
+    border: 5px;
+    border-style: solid;
+    border-color: chocolate;
+}
+
+.houseIoTimg {
+    width: 75%;
+    height: auto;
+    border: 5px;
+    border-style: solid;
+    border-color: antiquewhite;
+}
+
+.imageCaption {
+    font-size: medium;
+    color: darkgrey;
+}
+
+.productsSection {
+    display: flex;
+    justify-content: space-evenly;
+}

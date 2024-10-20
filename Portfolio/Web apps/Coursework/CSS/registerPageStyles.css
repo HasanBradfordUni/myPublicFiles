@@ -1,0 +1,41 @@
+.registerPart {
+    display: flex;
+    justify-content: center;
+    margin: 3%;
+    height: max-content;
+}
+
+.registerForm {
+    box-shadow: 0 3px 3px 0;
+    box-shadow: white;
+    background-color: mediumspringgreen;
+    width: 20%;
+    height: max-content;
+}
+
+.fullWidthInput {
+    width: 90%;
+    max-height: 30px;
+    border-color: cornsilk;
+    background-color: ghostwhite;
+    margin-top: 10px;
+    border-radius: 3px;
+    padding: 20px 30px;
+    box-sizing: border-box;
+}
+
+.submitButton {
+    background-color: cornflowerblue;
+    color: white;
+    border-style: double;
+    border-color: blue;
+    width: 50%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.submitButton:hover {
+    background-color: rgba(207, 84, 26, 0.753);
+    transition: 500ms;
+}

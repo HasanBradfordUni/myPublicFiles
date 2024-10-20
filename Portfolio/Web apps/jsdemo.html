@@ -1,0 +1,58 @@
+<html>
+
+<head>
+    <title>Javascript Demo</title>
+</head>
+
+<body onload="window.alert('This is an introduction to JavaScript')">
+    <h1>JavaScript Demonstration</h1>
+    <input type="button" onclick="displayJavaMsg()" value="Java" />
+    <input type="button" onclick="displayJavaScriptMsg()" value="JavaScript" /><br><br>
+    <hr>
+    <h1>Using a Generic Function</h1>
+    <input type="button" onclick="displayMsg('Java')" value="Java Info" />
+    <input type="button" onclick="displayMsg('JavaScript')" value="JavaScript Info" /><br><br>
+    <hr>
+    <h1>A Function to Display Your Hours</h1>
+    <input type="button" onclick="displayHours()" value="Your Contact Hours" />
+    <script>
+        function displayJavaMsg() {
+            var sentence1, sentence2;
+            sentence1 = "Java is an object-oriented programming language and has a virtual machine platform that allows you to create compiled programs that run on nearly every platform.";
+            sentence2 = "Java is one of the simple languages as it does not have complex features like pointers, operator overloading, multiple inheritances, and Explicit memory allocation.";
+            alert(sentence1 + '\n' + sentence2);
+        }
+
+        function displayJavaScriptMsg() {
+            var sentence1, sentence2;
+            sentence1 = "JavaScript is a lightweight programming language(“scripting language”) and is used to make web pages interactive.";
+            sentence2 = "It can insert dynamic text into HTML.";
+            alert(sentence1 + '\n' + sentence2);
+        }
+
+        function displayMsg(buttonType) {
+            var sentence1, sentence2;
+            if (buttonType == "Java") {
+                sentence1 = "Java is an object-oriented programming language and has a virtual machine platform that allows you to create compiled programs that run on nearly every platform.";
+                sentence2 = "Java is one of the simple languages as it does not have complex features like pointers, operator overloading, multiple inheritances, and Explicit memory allocation.";
+            } else {
+                sentence1 = "JavaScript is a lightweight programming language(“scripting language”) and is used to make web pages interactive.";
+                sentence2 = "It can insert dynamic text into HTML.";
+            }
+            alert(sentence1 + '\n' + sentence2);
+        }
+
+        function displayHours() {
+            var hours = prompt("Enter your contact hours per week", "10");
+            try {
+                var intHours = parseInt(hours);
+                var totalHours = intHours * 12;
+                alert("Your class contact this semester:"+'\n'+totalHours+" hours.");
+            } catch {
+                alert("Class contact hours cannopt be displayed!")
+            }
+        }
+    </script>
+</body>
+
+</html>

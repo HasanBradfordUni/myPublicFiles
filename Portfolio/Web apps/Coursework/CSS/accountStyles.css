@@ -1,0 +1,127 @@
+p {
+    color: #fff;
+}
+
+.center {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+}
+
+.account-info {
+    margin-bottom: 20px;
+}
+
+.purchased-gadgets {
+    width: 100%;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-collapse: collapse;
+}
+
+
+td, th {
+    border: 3px solid white;
+    text-align: center;
+    padding: 10px;
+  }
+
+tr {
+    width: 100%;
+}
+
+.detailsForm {
+    box-shadow: 0 0 5px 5px;
+    box-shadow: black;
+    background-color: plum;
+    width: 40%;
+    height: max-content;
+    margin: auto;
+}
+
+.halfWidthInput {
+    width: 25%;
+    max-height: 30px;
+    border-color: cornsilk;
+    background-color: ghostwhite;
+    margin-top: 10px;
+    border-radius: 3px;
+    padding: 20px 30px;
+    box-sizing: border-box;
+}
+
+.submitButton {
+    background-color: rgba(161, 142, 32, 0.822);
+    color: white;
+    border-style: double;
+    border-color: blue;
+    width: 50%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.submitButton:hover {
+    background-color: rgba(233, 18, 18, 0.986);
+    transition: 500ms;
+}
+
+.buttonsPanel {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 1cm;
+}
+
+.buttonsPanel button {
+    color: black;
+    box-shadow: 0px 5px 5px 10px black;
+    margin: 5px;
+    padding: 15px;
+    border: solid 3px blue;
+    background-color: white;
+}
+
+.buttonsPanel button:hover {
+    color: white;
+    background-color: blue;
+    border-color: black;
+    box-shadow: none;
+    transition: 0.5s;
+}
+
+.halfBoxInput {
+    width: 25%;
+    min-height: 100px;
+    margin-bottom: 10px;
+}
+
+.adminForm {
+    box-shadow: 0 0 5px 5px;
+    box-shadow: black;
+    background-color: mediumaquamarine;
+    width: 40%;
+    height: max-content;
+    margin: auto;
+}
+
+.productForm {
+    box-shadow: 0 0 5px 5px;
+    box-shadow: black;
+    background-color: cornflowerblue;
+    width: 40%;
+    height: max-content;
+    margin: auto;
+}
+
+#adminsTable {
+    width: 50%;
+    margin: auto;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-collapse: collapse;
+}

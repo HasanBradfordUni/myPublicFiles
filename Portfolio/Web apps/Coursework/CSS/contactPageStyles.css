@@ -1,0 +1,62 @@
+.contactForm {
+    box-shadow: 0 0 5px 5px;
+    box-shadow: black;
+    background-color: lightcoral;
+    width: fit-content;
+    height: 370px;
+}
+
+.contactPart {
+    display: flex;
+    justify-content: center;
+    margin: 5%;
+}
+
+.nameInputs {
+    display: flex;
+    justify-content: space-evenly;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.contactForm label {
+    color: lightgray;
+}
+
+.contactForm input {
+    max-width: 90%;
+    border-color: cornsilk;
+    background-color: ghostwhite;
+    margin-top: 10px;
+}
+
+.nameInputs input {
+    width: 40%;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.fullWidthInput {
+    width: 90%;
+}
+
+.fullBoxInput {
+    width: 90%;
+    min-height: 100px;
+    margin-bottom: 10px;
+}
+
+.submitButton {
+    background-color: cornflowerblue;
+    color: white;
+    border-style: double;
+    border-color: blue;
+    width: 90%;
+    min-height: 10%;
+    text-transform: uppercase
+}
+
+.submitButton:hover {
+    background-color: cadetblue;
+    transition: 500ms;
+}
