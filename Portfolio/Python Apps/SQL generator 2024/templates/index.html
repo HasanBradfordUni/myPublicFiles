@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .inputs {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        textarea {
+            width: 45%;
+            height: 150px;
+        }
+        .output {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .textarea2 {
+            width: 100%;
+            height: 150px;
+        }
+    </style>
+    <script>
+        function copyToClipboard() {
+            const outputText = document.getElementById("output-text").value;
+            navigator.clipboard.writeText(outputText).then(() => {
+                alert("Copied to clipboard");
+            });
+        }
+
+        async function submitForm(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/process', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            document.getElementById("output-text").value = result.output;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Akhtar Hasan SQL Statement Generator</h1>
+        <h2>Official product of Akhtar hasan Software Solutions - © Akhtar Hasan 2025</h2>
+        <form onsubmit="submitForm(event)">
+            <div class="inputs">
+                <textarea name="template" placeholder="Template Input"></textarea>
+                <textarea name="data" placeholder="Data Input"></textarea>
+            </div>
+            <div class="output">
+                <textarea class="textarea2" id="output-text" readonly placeholder="Output will be displayed here"></textarea>
+            </div>
+            <button type="submit">Submit</button>
+            <button type="button" onclick="copyToClipboard()">Copy</button>
+        </form>
+    </div>
+</body>
+</html>
