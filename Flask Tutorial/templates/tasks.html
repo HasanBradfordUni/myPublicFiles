@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks - Task Timer App</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin: 0 1rem;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        main {
+            padding: 2rem;
+        }
+        .task-container {
+            width: 70%;
+            margin: 10px auto;
+            padding: 10px;
+            height: 100px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-info {
+            flex-grow: 1;
+        }
+        .task-timer {
+            display: none;
+            margin-top: 10px;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Task Timer App</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('getTasks') }}">Tasks</a></li>
+                <li><a href="{{ url_for('loginPage') }}">Login</a></li>
+                <li><a href="{{ url_for('registerPage') }}">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+    <section id="task-list">
+        <h2>Your Tasks</h2>
+        <div id="tasks">
+            <!-- Tasks will be dynamically loaded here -->
+            {% for task in tasks %}
+            <div class="task-container" data-task-id="{{ task.id }}">
+                <div class="task-info">
+                    <h3>{{ task.task }}</h3>
+                    <p>Duration: <span class="task-duration">{{ task.duration / 60 }}</span> minutes</p>
+                </div>
+                <button class="start-timer-btn">Start Timer</button>
+            </div>
+            <div class="task-timer" style="text-align: center; font-size: 48px; font-family: Arial, sans-serif; display: none;">
+            <p>Time Remaining: <span class="timer-display">{{ task.time_remaining // 60 }}:{{ task.time_remaining % 60 }}</span></p>
+            <input type="hidden" class="time-remaining" value="{{ task.time_remaining // 60 }}" id="time-remaining">
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let activeTimer = null;
+
+            const startTimerButtons = document.querySelectorAll('.start-timer-btn');
+
+            startTimerButtons.forEach(button => {
+                const taskContainer = button.closest('.task-container');
+                const timerDisplay = taskContainer.nextElementSibling.querySelector('.timer-display');
+                const taskDuration = parseInt(taskContainer.querySelector('.task-duration').textContent) * 60;
+                let timeRemaining = document.getElementById('time-remaining').value;
+
+
+                button.addEventListener('click', function() {
+                    if (activeTimer) {
+                        alert('2 Task timers cannot be started at the same time');
+                        return;
+                    }
+
+                    taskContainer.nextElementSibling.style.display = 'block';
+                    this.disabled = true;
+                    activeTimer = taskContainer;
+
+                    startTimer(taskContainer, timerDisplay, taskDuration);
+                });
+            });
+
+            function startTimer(taskContainer, timerDisplay, timeRemaining) {
+                const timerInterval = setInterval(() => {
+                    if (timeRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        activeTimer = null;
+                        alert('Congratulations! You have completed the task!');
+                        return;
+                    }
+
+                    timeRemaining--;
+                    const minutes = Math.floor(timeRemaining / 60);
+                    const seconds = timeRemaining % 60;
+                    timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                    if (timeRemaining % 60 === 0) {
+                        
+                        fetch('/update_timer', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                taskId: taskContainer.getAttribute('data-task-id'),
+                                timeRemaining: timeRemaining
+                            })
+                        });
+                    }
+                }, 1000);
+
+                window.addEventListener('beforeunload', function() {
+                    fetch('/update_timer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            taskId: taskContainer.getAttribute('data-task-id'),
+                            timeRemaining: timeRemaining
+                        })
+                    });
+                });
+            }
+        });
+    </script>
+    </main>
+    <footer>
+        <p>&copy; 2025 Task Timer App</p>
+    </footer>
+</body>
+</html>

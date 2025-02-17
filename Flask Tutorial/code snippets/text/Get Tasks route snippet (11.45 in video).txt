@@ -1,0 +1,3 @@
+@app.route('/getTasks', methods=['GET'])
+def getTasks():
+    return render_template('tasks.html', tasks=tasks)

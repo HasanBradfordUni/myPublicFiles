@@ -1,0 +1,7 @@
+@app.route('/set_timer', methods=['POST'])
+def set_timer():
+    task_name = request.form['task']
+    task_duration = int(request.form['duration']) * 60  # Convert to seconds
+    task_id = len(tasks) + 1  # Simple way to generate a task ID
+    tasks.append({'id': task_id, 'task': task_name, 'duration': task_duration, 'time_remaining': task_duration})
+    return redirect(url_for('index'))

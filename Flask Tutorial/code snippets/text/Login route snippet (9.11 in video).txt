@@ -1,0 +1,8 @@
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    for login in logins:
+        if login['username'] == username and login['password'] == password:
+            return redirect(url_for('index'))
+    return 'Invalid login'

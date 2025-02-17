@@ -1,0 +1,10 @@
+@app.route('/update_timer', methods=['POST'])
+def update_timer():
+    data = request.get_json()
+    task_id = int(data['taskId'])
+    time_remaining = int(data['timeRemaining'])
+    for task in tasks:
+        if task['id'] == task_id:
+            task['time_remaining'] = time_remaining
+            break
+    return jsonify({'status': 'success'})

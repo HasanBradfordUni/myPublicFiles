@@ -1,0 +1,6 @@
+@app.route('/set_timer', methods=['POST'])
+def set_timer():
+    task_name = request.form['task']
+    task_duration = request.form['duration']
+    tasks.append({'task': task_name, 'duration': task_duration})
+    return redirect(url_for('index'))

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Timer App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin: 0 1rem;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        main {
+            padding: 2rem;
+        }
+        section {
+            margin-bottom: 2rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin-bottom: 0.5rem;
+        }
+        form input {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        form button {
+            padding: 0.5rem;
+            font-size: 1rem;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #555;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Task Timer App</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('getTasks') }}">Tasks</a></li>
+                <li><a href="{{ url_for('loginPage') }}">Login</a></li>
+                <li><a href="{{ url_for('registerPage') }}">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="task-timer">
+            <h2>Set a Timer</h2>
+            <form action="{{ url_for('set_timer') }}" method="post">
+                <label for="task">Task:</label>
+                <input type="text" id="task" name="task" required>
+                <label for="duration">Duration (minutes):</label>
+                <input type="number" id="duration" name="duration" required>
+                <button type="submit">Start Timer</button>
+            </form>
+        </section>
+        <section id="task-list">
+            <h2>Your Tasks</h2>
+            <ul>
+                <!-- Tasks will be dynamically loaded here -->
+                {% for task in tasks %}
+                <li>{{ task.task }} - 
+                    {% if task.duration == task.time_remaining %}
+                        {{ task.duration // 60 }} minutes
+                    {% else %}
+                        {{ task.time_remaining // 60 }} minutes left
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Task Timer App</p>
+    </footer>
+</body>
+</html>

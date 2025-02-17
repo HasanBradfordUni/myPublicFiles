@@ -1,0 +1,9 @@
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form['username']
+    password = request.form['password']
+    confirm_password = request.form['confirm_password']
+    if password != confirm_password:
+        return 'Passwords do not match'
+    logins.append({'username': username, 'password': password})
+    return redirect(url_for('loginPage'))
