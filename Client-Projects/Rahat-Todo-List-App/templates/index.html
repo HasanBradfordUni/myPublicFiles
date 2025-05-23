@@ -296,115 +296,244 @@
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const addTaskBtn = document.getElementById('add-task-btn');
-            const editTaskBtn = document.getElementById('edit-task-btn');
-            const removeTaskBtn = document.getElementById('remove-task-btn');
-            const taskInput = document.getElementById('task-input');
-            const addTaskForm = document.getElementById('add-task-form');
-            const removeTasksForm = document.getElementById('remove-tasks-form');
+document.addEventListener('DOMContentLoaded', function() {
+    const API_URL = 'https://your-render-app-name.onrender.com'; // Update this after deployment
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const editTaskBtn = document.getElementById('edit-task-btn');
+    const removeTaskBtn = document.getElementById('remove-task-btn');
+    const taskInput = document.getElementById('task-input');
+    const taskList = document.querySelector('.task-list');
+    
+    // Load tasks when page loads
+    fetchTasks();
+    
+    // Fetch all tasks from API
+    async function fetchTasks() {
+        try {
+            const response = await fetch(`${API_URL}/`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            renderTasks(data.tasks);
+            updateCounters(data.tasks);
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+        }
+    }
+    
+    // Render tasks to the DOM
+    function renderTasks(tasks) {
+        taskList.innerHTML = '';
+        
+        tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = `task-item ${task.completed ? 'completed' : ''}`;
+            li.dataset.id = task.id;
             
-            // Add task
-            addTaskBtn.addEventListener('click', function() {
-                if (taskInput.value.trim()) {
-                    addTaskForm.submit();
-                } else {
-                    taskInput.focus();
-                }
+            li.innerHTML = `
+                <div class="task-content">
+                    <div class="task-view">
+                        <span class="task-text">${task.content}</span>
+                    </div>
+                    <div class="task-edit hidden">
+                        <form class="edit-form">
+                            <input type="text" name="new_content" value="${task.content}">
+                            <div class="edit-buttons">
+                                <button type="submit" class="edit-save-btn">Save</button>
+                                <button type="button" class="edit-cancel-btn">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="task-status">
+                    <a href="#" class="toggle-btn">
+                        ${task.completed ? '✓' : '○'}
+                    </a>
+                    <input type="checkbox" name="task_ids" value="${task.id}" class="hidden-checkbox" style="display: none;">
+                </div>
+            `;
+            
+            taskList.appendChild(li);
+            
+            // Add event listener for toggling task
+            const toggleBtn = li.querySelector('.toggle-btn');
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleTask(task.id);
             });
             
-            // Edit task
-            editTaskBtn.addEventListener('click', function() {
-                const selectedTasks = document.querySelectorAll('.task-item.selected');
-                
-                if (selectedTasks.length === 0) {
-                    alert('Please select a task to edit.');
-                    return;
-                }
-                
-                if (selectedTasks.length > 1) {
-                    alert('Please select only one task to edit.');
-                    return;
-                }
-                
-                const taskItem = selectedTasks[0];
-                
-                if (taskItem.classList.contains('completed')) {
-                    alert('Completed tasks cannot be edited.');
-                    return;
-                }
-                
-                // Toggle visibility between view and edit mode
-                const taskView = taskItem.querySelector('.task-view');
-                const taskEdit = taskItem.querySelector('.task-edit');
-                
-                taskView.classList.add('hidden');
-                taskEdit.classList.remove('hidden');
-                
-                // Focus on the input field
-                const editInput = taskEdit.querySelector('input[name="new_content"]');
-                editInput.focus();
-                // Position cursor at the end of the text
-                const textLength = editInput.value.length;
-                editInput.setSelectionRange(textLength, textLength);
+            // Add event listener for edit form submission
+            const editForm = li.querySelector('.edit-form');
+            editForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newContent = editForm.querySelector('input[name="new_content"]').value;
+                editTask(task.id, newContent);
             });
             
-            // Cancel edit
-            document.querySelectorAll('.edit-cancel-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation(); // Prevent task selection when clicking cancel
-                    
-                    const taskItem = this.closest('.task-item');
-                    const taskView = taskItem.querySelector('.task-view');
-                    const taskEdit = taskItem.querySelector('.task-edit');
-                    
-                    taskView.classList.remove('hidden');
-                    taskEdit.classList.add('hidden');
-                });
+            // Add cancel button listener
+            const cancelBtn = li.querySelector('.edit-cancel-btn');
+            cancelBtn.addEventListener('click', () => {
+                const taskView = li.querySelector('.task-view');
+                const taskEdit = li.querySelector('.task-edit');
+                taskView.classList.remove('hidden');
+                taskEdit.classList.add('hidden');
             });
-            
-            // Remove tasks
-            removeTaskBtn.addEventListener('click', function() {
-                const selectedTasks = document.querySelectorAll('.task-item.selected');
-                
-                if (selectedTasks.length === 0) {
-                    alert('Please select at least one task to remove.');
-                    return;
-                }
-                
-                if (confirm('Are you sure you want to remove ' + selectedTasks.length + ' selected task(s)?')) {
-                    // Check the hidden checkboxes for all selected tasks
-                    selectedTasks.forEach(task => {
-                        const checkbox = task.querySelector('.hidden-checkbox');
-                        checkbox.checked = true;
-                    });
-                    
-                    // Submit the form to delete multiple tasks
-                    removeTasksForm.submit();
-                }
-            });
-            
-            // Task selection
-            document.querySelectorAll('.task-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Don't select when clicking on links, buttons, inputs or when in edit mode
-                    if (!e.target.closest('a') && 
-                        !e.target.closest('button') && 
-                        !e.target.closest('input') &&
-                        !this.querySelector('.task-edit:not(.hidden)')) {
-                        this.classList.toggle('selected');
-                    }
-                });
-            });
-            
-            // Allow pressing Enter to add a task
-            taskInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && this.value.trim()) {
-                    addTaskForm.submit();
+        });
+        
+        // Re-add task selection event listeners
+        document.querySelectorAll('.task-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (!e.target.closest('a') && 
+                    !e.target.closest('button') && 
+                    !e.target.closest('input') &&
+                    !this.querySelector('.task-edit:not(.hidden)')) {
+                    this.classList.toggle('selected');
                 }
             });
         });
+    }
+    
+    // Update task counters
+    function updateCounters(tasks) {
+        document.getElementById('task-count').textContent = tasks.length;
+        document.getElementById('completed-count').textContent = tasks.filter(t => t.completed).length;
+    }
+    
+    // Add task
+    async function addTask(content) {
+        try {
+            const formData = new FormData();
+            formData.append('task_content', content);
+            
+            await fetch(`${API_URL}/add_task`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            fetchTasks(); // Refresh tasks
+            taskInput.value = ''; // Clear input
+        } catch (error) {
+            console.error('Error adding task:', error);
+        }
+    }
+    
+    // Edit task
+    async function editTask(taskId, newContent) {
+        try {
+            const formData = new FormData();
+            formData.append('new_content', newContent);
+            
+            await fetch(`${API_URL}/edit_task/${taskId}`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            fetchTasks(); // Refresh tasks
+        } catch (error) {
+            console.error('Error editing task:', error);
+        }
+    }
+    
+    // Toggle task completion
+    async function toggleTask(taskId) {
+        try {
+            await fetch(`${API_URL}/toggle_task/${taskId}`, {
+                credentials: 'include'
+            });
+            
+            fetchTasks(); // Refresh tasks
+        } catch (error) {
+            console.error('Error toggling task:', error);
+        }
+    }
+    
+    // Remove multiple tasks
+    async function removeTasks(taskIds) {
+        try {
+            const formData = new FormData();
+            taskIds.forEach(id => {
+                formData.append('task_ids', id);
+            });
+            
+            await fetch(`${API_URL}/remove_multiple_tasks`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            fetchTasks(); // Refresh tasks
+        } catch (error) {
+            console.error('Error removing tasks:', error);
+        }
+    }
+    
+    // Event listeners
+    addTaskBtn.addEventListener('click', function() {
+        if (taskInput.value.trim()) {
+            addTask(taskInput.value.trim());
+        } else {
+            taskInput.focus();
+        }
+    });
+    
+    editTaskBtn.addEventListener('click', function() {
+        const selectedTasks = document.querySelectorAll('.task-item.selected');
+        
+        if (selectedTasks.length === 0) {
+            alert('Please select a task to edit.');
+            return;
+        }
+        
+        if (selectedTasks.length > 1) {
+            alert('Please select only one task to edit.');
+            return;
+        }
+        
+        const taskItem = selectedTasks[0];
+        
+        if (taskItem.classList.contains('completed')) {
+            alert('Completed tasks cannot be edited.');
+            return;
+        }
+        
+        // Toggle visibility between view and edit mode
+        const taskView = taskItem.querySelector('.task-view');
+        const taskEdit = taskItem.querySelector('.task-edit');
+        
+        taskView.classList.add('hidden');
+        taskEdit.classList.remove('hidden');
+        
+        // Focus on the input field
+        const editInput = taskEdit.querySelector('input[name="new_content"]');
+        editInput.focus();
+        // Position cursor at the end
+        const textLength = editInput.value.length;
+        editInput.setSelectionRange(textLength, textLength);
+    });
+    
+    removeTaskBtn.addEventListener('click', function() {
+        const selectedTasks = document.querySelectorAll('.task-item.selected');
+        
+        if (selectedTasks.length === 0) {
+            alert('Please select at least one task to remove.');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to remove ' + selectedTasks.length + ' selected task(s)?')) {
+            const taskIds = Array.from(selectedTasks).map(task => task.dataset.id);
+            removeTasks(taskIds);
+        }
+    });
+    
+    // Allow pressing Enter to add a task
+    taskInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value.trim()) {
+            addTask(this.value.trim());
+        }
+    });
+});
     </script>
 </body>
 </html>

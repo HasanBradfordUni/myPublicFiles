@@ -2,8 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, m
 import sqlite3
 import uuid
 import os
+from flask_cors import CORS
 
-app = Flask(__name__)  # Create a Flask app
+app = Flask(__name__)
+CORS(app, supports_credentials=True)  # This allows cross-origin requests with credentials
 
 # Database setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +40,7 @@ def get_device_id():
     
     return device_id
 
-@app.route('/')  # Define a route
+@app.route('/')
 def home():
     device_id = get_device_id()
     
@@ -50,12 +52,15 @@ def home():
     tasks = [dict(row) for row in c.fetchall()]
     conn.close()
     
-    # Create response with tasks and set cookie if needed
-    response = make_response(render_template('index.html', tasks=tasks))
+    # Create JSON response with tasks and set cookie if needed
+    response = make_response(jsonify({
+        'tasks': tasks,
+        'total': len(tasks),
+        'completed': sum(1 for task in tasks if task['completed'])
+    }))
     
     # Set the device_id cookie if it doesn't exist
     if not request.cookies.get('device_id'):
-        # Set cookie to expire in 10 years (plenty of time)
         response.set_cookie('device_id', device_id, max_age=60*60*24*365*10)
     
     return response
@@ -72,13 +77,12 @@ def add_task():
                  (device_id, task_content, False))
         conn.commit()
         conn.close()
-        
-    response = make_response(redirect(url_for('home')))
     
-    # Set cookie if it doesn't exist
+    response = make_response(jsonify({'success': True}))
+    
     if not request.cookies.get('device_id'):
         response.set_cookie('device_id', device_id, max_age=60*60*24*365*10)
-        
+    
     return response
 
 @app.route('/edit_task/<int:task_id>', methods=['POST'])
@@ -93,8 +97,8 @@ def edit_task(task_id):
                  (new_content, task_id, device_id))
         conn.commit()
         conn.close()
-        
-    return redirect(url_for('home'))
+    
+    return jsonify({'success': True})
 
 @app.route('/remove_task/<int:task_id>')
 def remove_task(task_id):
@@ -106,7 +110,7 @@ def remove_task(task_id):
     conn.commit()
     conn.close()
     
-    return redirect(url_for('home'))
+    return jsonify({'success': True})
 
 @app.route('/remove_multiple_tasks', methods=['POST'])
 def remove_multiple_tasks():
@@ -117,18 +121,16 @@ def remove_multiple_tasks():
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         
-        # Use parameterized query for safety
         placeholders = ','.join(['?'] * len(task_ids))
         query = f'DELETE FROM tasks WHERE id IN ({placeholders}) AND device_id = ?'
         
-        # Add device_id as the last parameter
         params = task_ids + [device_id]
         
         c.execute(query, params)
         conn.commit()
         conn.close()
     
-    return redirect(url_for('home'))
+    return jsonify({'success': True})
 
 @app.route('/toggle_task/<int:task_id>')
 def toggle_task(task_id):
@@ -137,7 +139,6 @@ def toggle_task(task_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    # First get the current state
     c.execute('SELECT completed FROM tasks WHERE id = ? AND device_id = ?', (task_id, device_id))
     task = c.fetchone()
     
@@ -148,7 +149,10 @@ def toggle_task(task_id):
         conn.commit()
     
     conn.close()
-    return redirect(url_for('home'))
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run('localhost')
+else:
+    # For Gunicorn
+    application = app
