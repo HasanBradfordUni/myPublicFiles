@@ -1,0 +1,25 @@
+{
+    "source_directory": "",
+    "file_action": "move",
+    "monitoring": {
+        "enabled": false,
+        "type": "scheduled",
+        "interval": 3600
+    },
+    "sorting_rules": {
+        "extensions": {
+            "pdf": "Documents/PDFs",
+            "docx": "Documents/Word",
+            "xlsx": "Documents/Excel",
+            "jpg": "Images/Photos",
+            "png": "Images/Photos",
+            "mp3": "Media/Audio",
+            "mp4": "Media/Video"
+        },
+        "patterns": {
+            "invoice": "Documents/Invoices",
+            "receipt": "Documents/Receipts"
+        },
+        "other": "Unsorted"
+    }
+}

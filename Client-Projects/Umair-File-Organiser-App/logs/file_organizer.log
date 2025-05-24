@@ -1,0 +1,15 @@
+2025-05-24 18:29:02,860 - FileOrganizer - INFO - Starting File Organizer application
+Output:
+INFO: Starting File Organizer application
+2025-05-24 18:29:02,861 - FileOrganizer - INFO - Configuration saved to config.json
+Output:
+INFO: Configuration saved to config.json
+2025-05-24 18:29:02,862 - FileOrganizer - INFO - Created default configuration at config.json
+Output:
+INFO: Created default configuration at config.json
+2025-05-24 18:29:02,864 - FileOrganizer - INFO - Configuration loaded from config.json
+Output:
+INFO: Configuration loaded from config.json
+2025-05-24 18:34:21,868 - FileOrganizer - INFO - Shutting down File Organizer application
+Output:
+INFO: Shutting down File Organizer application
