@@ -5,11 +5,23 @@ import time
 import shutil
 import logging
 import threading
-import tkinter as tk
 import subprocess
-from tkinter import ttk, filedialog, messagebox, scrolledtext
 from datetime import datetime
 from pathlib import Path
+
+"""The following imports are not from natively installed Python libraries,
+see requirements.txt for which libraries to install."""
+
+# PyQt6 imports (replacing Tkinter)
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QLineEdit, QPushButton, QRadioButton, QCheckBox, QGroupBox,
+    QTreeWidget, QTreeWidgetItem, QScrollArea, QSpinBox, QTextEdit,
+    QFileDialog, QMessageBox, QSplitter, QFrame, QButtonGroup, QDialog
+)
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize
+from PyQt6.QtGui import QFont, QColor, QIcon
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -27,6 +39,7 @@ APP_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CONFIG = {
     'source_directory': '',
     'file_action': 'move',  # 'move' or 'copy'
+    'destination_directory': '', # for choosing the destination directory
     'monitoring': {
         'enabled': False,
         'type': 'scheduled',  # 'realtime' or 'scheduled'
@@ -65,15 +78,15 @@ class EnhancedLogger:
         log_dir.mkdir(exist_ok=True)
         
         # Set up Python's standard logger
-        self.logger = logging.getLogger("FileOrganizer")
+        self.logger = logging.getLogger("ManchesterUnitedFileOrganizer")
         self.logger.setLevel(logging.INFO)
         
         # Clear any existing handlers to avoid duplicates
         if self.logger.handlers:
             self.logger.handlers.clear()
         
-        # Create file handler for standard logging
-        file_handler = logging.FileHandler(log_dir / self.log_file)
+        # Create file handler for standard logging with UTF-8 encoding
+        file_handler = logging.FileHandler(log_dir / self.log_file, encoding='utf-8')
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(file_handler)
         
@@ -106,28 +119,28 @@ class EnhancedLogger:
     
     def _add_to_logs(self, message):
         """Add custom formatted output logs"""
-        with open(self.log_path, 'a') as logger:
+        with open(self.log_path, 'a', encoding='utf-8') as logger:
             logger.write("Output:\n")
             message = message.replace("  ", "\n")
             logger.write(message + "\n")
     
     def _add_to_error_logs(self, error_message):
         """Add custom formatted error logs"""
-        with open(self.log_path, 'a') as logger:
+        with open(self.log_path, 'a', encoding='utf-8') as logger:
             logger.write("Error:\n")
             error_message = error_message.replace("  ", "\n")
             logger.write(error_message + "\n")
     
     def _add_to_input_logs(self, input_prompt, input_statement):
         """Add custom formatted input logs"""
-        with open(self.log_path, 'a') as logger:
+        with open(self.log_path, 'a', encoding='utf-8') as logger:
             logger.write("User Input:\n")
             logger.write(input_prompt + " " + input_statement + "\n")
     
     def search_logs(self, search_term, log_type="all"):
         """Search logs for a specific term"""
         try:
-            with open(self.log_path, 'r') as logger:
+            with open(self.log_path, 'r', encoding='utf-8') as logger:
                 lines = logger.readlines()
                 
             results = []
@@ -156,7 +169,7 @@ class EnhancedLogger:
     def get_recent_logs(self, count=50, log_type="all"):
         """Get the most recent logs"""
         try:
-            with open(self.log_path, 'r') as logger:
+            with open(self.log_path, 'r', encoding='utf-8') as logger:
                 lines = logger.readlines()
                 
             results = []
@@ -199,6 +212,16 @@ class FileSorter:
     def __init__(self, config):
         self.config = config
         self.source_dir = Path(config.get('source_directory', ''))
+        self.destination_dir = Path(config.get('destination_directory', ''))
+        
+        # Fix: If destination directory is empty or not set, explicitly use the source directory
+        if not self.destination_dir or str(self.destination_dir).strip() == '':
+            self.destination_dir = self.source_dir
+            
+        # Log the directories being used
+        logger.info(f"Source directory: {self.source_dir}")
+        logger.info(f"Destination directory: {self.destination_dir}")
+        
         self.rules = config.get('sorting_rules', {})
         self.action = config.get('file_action', 'move')  # 'move' or 'copy'
         
@@ -208,7 +231,16 @@ class FileSorter:
             logger.error(f"Source directory does not exist: {self.source_dir}")
             return False
             
-        logger.info(f"Starting file sorting in {self.source_dir}")
+        # Double-check that destination directory is properly set
+        # If destination is empty, use source directory
+        if not self.destination_dir or str(self.destination_dir).strip() == '':
+            self.destination_dir = self.source_dir
+            print(self.destination_dir)
+            logger.info(f"Empty destination directory. Using source directory instead: {self.destination_dir}")
+            
+        if str(self.destination_dir).strip() == ".":
+            self.destination_dir = self.source_dir
+        logger.info(f"Starting file sorting from {self.source_dir} to {self.destination_dir}")
         file_count = 0
         
         try:
@@ -231,20 +263,24 @@ class FileSorter:
             
             # Check extension-based rules
             if extension in self.rules.get('extensions', {}):
-                target_folder = Path(self.source_dir) / self.rules['extensions'][extension]
+                # Create an absolute path for the target folder
+                target_folder_path = self.rules['extensions'][extension]
+                target_folder = self.destination_dir / target_folder_path
                 return self._move_or_copy_file(file_path, target_folder)
             
             # Check pattern-based rules (e.g., filename contains certain text)
             for pattern, folder in self.rules.get('patterns', {}).items():
                 if pattern.lower() in file_path.name.lower():
-                    target_folder = Path(self.source_dir) / folder
+                    # Create an absolute path for the target folder
+                    target_folder = self.destination_dir / folder
                     return self._move_or_copy_file(file_path, target_folder)
             
             # Handle uncategorized files
             if 'other' in self.rules:
-                target_folder = Path(self.source_dir) / self.rules['other']
+                # Create an absolute path for the target folder
+                target_folder = self.destination_dir / self.rules['other']
                 return self._move_or_copy_file(file_path, target_folder)
-                
+            
             return False
         except Exception as e:
             logger.error(f"Error processing file {file_path}: {str(e)}")
@@ -253,6 +289,11 @@ class FileSorter:
     def _move_or_copy_file(self, file_path, target_folder):
         """Move or copy file to target folder based on configuration."""
         try:
+            # Convert relative path to absolute by joining with destination_dir
+            target_folder = self.destination_dir / target_folder
+            print(self.destination_dir)
+            logger.info(f"Target folder is {target_folder} and destination directory is {self.destination_dir}")
+            
             # Create target folder if it doesn't exist
             target_folder.mkdir(parents=True, exist_ok=True)
             
@@ -264,13 +305,17 @@ class FileSorter:
                 new_name = f"{file_path.stem}_{timestamp}{file_path.suffix}"
                 target_file = target_folder / new_name
             
+            # Log the actual paths being used for debugging
+            logger.debug(f"Source: {file_path} (absolute: {file_path.absolute()})")
+            logger.debug(f"Target: {target_file} (absolute: {target_file.absolute()})")
+            
             # Move or copy based on configuration
             if self.action == 'move':
                 shutil.move(str(file_path), str(target_file))
-                logger.info(f"Moved: {file_path.name} → {target_file.relative_to(self.source_dir)}")
+                logger.info(f"Moved: {file_path.name} to {target_file}")
             else:  # copy
                 shutil.copy2(str(file_path), str(target_file))
-                logger.info(f"Copied: {file_path.name} → {target_file.relative_to(self.source_dir)}")
+                logger.info(f"Copied: {file_path.name} to {target_file}")
             
             return True
         except Exception as e:
@@ -452,39 +497,150 @@ class FileWatcher:
         logger.info("File watcher stopped.")
 
 # ===============================
-# MAIN APPLICATION GUI
+# WORKER THREAD FOR UI RESPONSIVENESS
 # ===============================
 
-class FileOrganizerApp:
-    def __init__(self, root, config_manager, file_sorter, file_watcher):
-        self.root = root
+class SorterThread(QThread):
+    """Worker thread to run file sorting without blocking UI"""
+    finished = pyqtSignal(bool)
+    error = pyqtSignal(str)
+    
+    def __init__(self, file_sorter):
+        super().__init__()
+        self.file_sorter = file_sorter
+        
+    def run(self):
+        try:
+            success = self.file_sorter.sort_files()
+            self.finished.emit(success)
+        except Exception as e:
+            logger.error(f"Error during sorting operation: {str(e)}", exc_info=True)
+            self.error.emit(str(e))
+
+# ===============================
+# MAIN APPLICATION GUI - PYQT6 VERSION
+# ===============================
+
+class FileOrganizerApp(QMainWindow):
+    def __init__(self, config_manager, file_sorter, file_watcher):
+        super().__init__()
         self.config_manager = config_manager
         self.file_sorter = file_sorter
         self.file_watcher = file_watcher
         self.config = config_manager.get_config()
+        self.sorter_thread = None
         
         # Setup the main window
-        self.root.title("File Organizer")
-        self.root.geometry("900x700")
-        self.root.minsize(800, 600)
+        self.setWindowTitle("The Manchester United File Organiser System")
+        self.setGeometry(100, 100, 900, 700)
+        self.setMinimumSize(800, 600)
         
-        # Create notebook (tabbed interface)
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Set application style and theme colors - red and yellow for Manchester United
+        self.setStyleSheet("""
+            QMainWindow, QWidget {
+                background-color: #FFFFFF;
+                color: #000000;
+            }
+            QTabWidget::pane {
+                border: 1px solid #CCCCCC;
+                background-color: #FFFFFF;
+            }
+            QTabBar::tab {
+                background-color: #E8E8E8;
+                color: #000000;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-family: Arial;
+            }
+            QTabBar::tab:selected {
+                background-color: #C70101;
+                color: #FFFFFF;
+            }
+            QPushButton {
+                background-color: #FFD800;
+                color: #000000;
+                border: none;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-family: Arial;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #FFC200;
+            }
+            QPushButton:pressed {
+                background-color: #C70101;
+                color: #FFFFFF;
+            }
+            QPushButton#accentButton {
+                background-color: #C70101;
+                color: #FFFFFF;
+            }
+            QPushButton#accentButton:hover {
+                background-color: #A00000;
+            }
+            QLabel {
+                font-family: Arial;
+                color: #000000;
+            }
+            QGroupBox {
+                font-family: Arial;
+                font-weight: bold;
+                border: 1px solid #CCCCCC;
+                border-radius: 4px;
+                margin-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+            }
+            QTreeWidget {
+                font-family: Arial;
+                border: 1px solid #CCCCCC;
+            }
+            QTreeWidget::item:selected {
+                background-color: #C70101;
+                color: #FFFFFF;
+            }
+            QLineEdit, QTextEdit, QSpinBox {
+                border: 1px solid #CCCCCC;
+                border-radius: 4px;
+                padding: 4px;
+                font-family: Arial;
+            }
+            QRadioButton, QCheckBox {
+                font-family: Arial;
+            }
+            QStatusBar {
+                background-color: #F0F0F0;
+                color: #000000;
+                font-family: Arial;
+            }
+        """)
+        
+        # Create central widget and main layout
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        
+        # Create tab widget
+        self.tabs = QTabWidget()
+        main_layout.addWidget(self.tabs)
         
         # Create main tabs
-        self.main_tab = ttk.Frame(self.notebook)
-        self.rules_tab = ttk.Frame(self.notebook)
-        self.monitor_tab = ttk.Frame(self.notebook)
-        self.logs_tab = ttk.Frame(self.notebook)
-        self.about_tab = ttk.Frame(self.notebook)
+        self.main_tab = QWidget()
+        self.rules_tab = QWidget()
+        self.monitor_tab = QWidget()
+        self.logs_tab = QWidget()
+        self.about_tab = QWidget()
         
-        # Add tabs to the notebook
-        self.notebook.add(self.main_tab, text="Main")
-        self.notebook.add(self.rules_tab, text="Sorting Rules")
-        self.notebook.add(self.monitor_tab, text="Monitoring")
-        self.notebook.add(self.logs_tab, text="Logs")
-        self.notebook.add(self.about_tab, text="About")
+        # Add tabs to tab widget
+        self.tabs.addTab(self.main_tab, "Main")
+        self.tabs.addTab(self.rules_tab, "Sorting Rules")
+        self.tabs.addTab(self.monitor_tab, "Monitoring")
+        self.tabs.addTab(self.logs_tab, "Logs")
+        self.tabs.addTab(self.about_tab, "About")
         
         # Build each tab's UI
         self._build_main_tab()
@@ -494,322 +650,358 @@ class FileOrganizerApp:
         self._build_about_tab()
         
         # Status bar at the bottom
-        self.status_var = tk.StringVar(value="Ready")
-        self.status_bar = ttk.Label(self.root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.status_bar = self.statusBar()
+        self.status_bar.showMessage("Ready")
         
         # Load configuration into UI
         self._load_config_to_ui()
+        
+        logger.info("Application UI initialized")
     
     def _build_main_tab(self):
         """Build the main tab UI."""
-        # Source directory section
-        source_frame = ttk.LabelFrame(self.main_tab, text="Source Directory", padding="10")
-        source_frame.pack(fill=tk.X, pady=5)
+        layout = QVBoxLayout(self.main_tab)
         
-        self.source_dir_var = tk.StringVar()
-        ttk.Entry(source_frame, textvariable=self.source_dir_var, width=50).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 5))
-        ttk.Button(source_frame, text="Browse", command=self._browse_directory).pack(side=tk.RIGHT)
+        # Source directory section
+        source_group = QGroupBox("Source Directory")
+        source_layout = QHBoxLayout(source_group)
+        
+        self.source_dir_edit = QLineEdit()
+        source_layout.addWidget(self.source_dir_edit)
+        
+        browse_src_btn = QPushButton("Browse")
+        browse_src_btn.clicked.connect(lambda: self._browse_directory("source"))
+        source_layout.addWidget(browse_src_btn)
+        
+        layout.addWidget(source_group)
+        
+        # Destination directory section
+        dest_group = QGroupBox("Destination Directory (leave empty to use source directory)")
+        dest_layout = QHBoxLayout(dest_group)
+        
+        self.dest_dir_edit = QLineEdit()
+        dest_layout.addWidget(self.dest_dir_edit)
+        
+        browse_dest_btn = QPushButton("Browse")
+        browse_dest_btn.clicked.connect(lambda: self._browse_directory("destination"))
+        dest_layout.addWidget(browse_dest_btn)
+
+        layout.addWidget(dest_group)
         
         # Action frame
-        action_frame = ttk.LabelFrame(self.main_tab, text="File Action", padding="10")
-        action_frame.pack(fill=tk.X, pady=5)
+        action_group = QGroupBox("File Action")
+        action_layout = QHBoxLayout(action_group)
         
-        self.action_var = tk.StringVar(value="move")
-        ttk.Radiobutton(action_frame, text="Move Files", variable=self.action_var, value="move").pack(side=tk.LEFT, padx=10)
-        ttk.Radiobutton(action_frame, text="Copy Files", variable=self.action_var, value="copy").pack(side=tk.LEFT, padx=10)
+        self.move_radio = QRadioButton("Move Files")
+        self.move_radio.setChecked(True)
+        self.copy_radio = QRadioButton("Copy Files")
+        
+        action_layout.addWidget(self.move_radio)
+        action_layout.addWidget(self.copy_radio)
+        action_layout.addStretch(1)
+        
+        layout.addWidget(action_group)
         
         # Operation buttons
-        button_frame = ttk.Frame(self.main_tab)
-        button_frame.pack(fill=tk.X, pady=20)
+        button_layout = QHBoxLayout()
         
-        ttk.Button(
-            button_frame, 
-            text="Run Now", 
-            command=self._run_sorting,
-            style="Accent.TButton"
-        ).pack(side=tk.LEFT, padx=5)
+        run_btn = QPushButton("Run Now")
+        run_btn.setObjectName("accentButton")
+        run_btn.clicked.connect(self._run_sorting)
+        button_layout.addWidget(run_btn)
         
-        ttk.Button(
-            button_frame, 
-            text="Save Configuration", 
-            command=self._save_config
-        ).pack(side=tk.LEFT, padx=5)
+        save_btn = QPushButton("Save Configuration")
+        save_btn.clicked.connect(self._save_config)
+        button_layout.addWidget(save_btn)
         
-        # Activity log in main tab
-        log_frame = ttk.LabelFrame(self.main_tab, text="Recent Activity", padding="10")
-        log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        button_layout.addStretch(1)
+        layout.addLayout(button_layout)
         
-        # Scrolled text widget for logs
-        self.activity_log = scrolledtext.ScrolledText(log_frame, height=10)
-        self.activity_log.pack(fill=tk.BOTH, expand=True)
-        self.activity_log.config(state=tk.DISABLED)  # Make it read-only
+        # Activity log
+        log_group = QGroupBox("Recent Activity")
+        log_layout = QVBoxLayout(log_group)
         
-        # Refresh logs button
-        ttk.Button(
-            log_frame,
-            text="Refresh Logs",
-            command=self._refresh_activity_logs
-        ).pack(side=tk.RIGHT, pady=5)
+        self.activity_log = QTextEdit()
+        self.activity_log.setReadOnly(True)
+        log_layout.addWidget(self.activity_log)
+        
+        refresh_log_btn = QPushButton("Refresh Logs")
+        refresh_log_btn.clicked.connect(self._refresh_activity_logs)
+        log_refresh_layout = QHBoxLayout()
+        log_refresh_layout.addStretch(1)
+        log_refresh_layout.addWidget(refresh_log_btn)
+        log_layout.addLayout(log_refresh_layout)
+        
+        layout.addWidget(log_group, 1)  # 1 = stretch factor to take available space
     
     def _build_rules_tab(self):
         """Build the rules tab UI."""
-        # Extension rules frame
-        ext_frame = ttk.LabelFrame(self.rules_tab, text="File Extension Rules", padding="10")
-        ext_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        layout = QVBoxLayout(self.rules_tab)
         
-        # Scrollable frame for extensions
-        scroll = ttk.Scrollbar(ext_frame)
-        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        # Extension rules section
+        ext_group = QGroupBox("File Extension Rules")
+        ext_layout = QVBoxLayout(ext_group)
         
-        self.ext_tree = ttk.Treeview(ext_frame, columns=("Extension", "Folder"), show="headings", yscrollcommand=scroll.set)
-        self.ext_tree.heading("Extension", text="Extension")
-        self.ext_tree.heading("Folder", text="Target Folder")
-        self.ext_tree.column("Extension", width=100)
-        self.ext_tree.column("Folder", width=300)
-        self.ext_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # Tree widget for extension rules
+        self.ext_tree = QTreeWidget()
+        self.ext_tree.setHeaderLabels(["Extension", "Target Folder"])
+        self.ext_tree.setColumnWidth(0, 100)
+        ext_layout.addWidget(self.ext_tree)
         
-        scroll.config(command=self.ext_tree.yview)
+        # Buttons for extension rules
+        ext_btn_layout = QHBoxLayout()
         
-        # Buttons for extensions
-        ext_buttons_frame = ttk.Frame(ext_frame)
-        ext_buttons_frame.pack(fill=tk.X, pady=5)
+        add_ext_btn = QPushButton("Add Rule")
+        add_ext_btn.clicked.connect(self._add_extension_rule)
+        ext_btn_layout.addWidget(add_ext_btn)
         
-        ttk.Button(ext_buttons_frame, text="Add Rule", command=self._add_extension_rule).pack(side=tk.LEFT, padx=5)
-        ttk.Button(ext_buttons_frame, text="Edit Rule", command=self._edit_extension_rule).pack(side=tk.LEFT, padx=5)
-        ttk.Button(ext_buttons_frame, text="Remove Rule", command=self._remove_extension_rule).pack(side=tk.LEFT, padx=5)
+        edit_ext_btn = QPushButton("Edit Rule")
+        edit_ext_btn.clicked.connect(self._edit_extension_rule)
+        ext_btn_layout.addWidget(edit_ext_btn)
         
-        # Pattern rules frame
-        pattern_frame = ttk.LabelFrame(self.rules_tab, text="Filename Pattern Rules", padding="10")
-        pattern_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        remove_ext_btn = QPushButton("Remove Rule")
+        remove_ext_btn.clicked.connect(self._remove_extension_rule)
+        ext_btn_layout.addWidget(remove_ext_btn)
         
-        # Scrollable frame for patterns
-        pattern_scroll = ttk.Scrollbar(pattern_frame)
-        pattern_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        ext_btn_layout.addStretch(1)
+        ext_layout.addLayout(ext_btn_layout)
         
-        self.pattern_tree = ttk.Treeview(pattern_frame, columns=("Pattern", "Folder"), show="headings", yscrollcommand=pattern_scroll.set)
-        self.pattern_tree.heading("Pattern", text="Pattern")
-        self.pattern_tree.heading("Folder", text="Target Folder")
-        self.pattern_tree.column("Pattern", width=100)
-        self.pattern_tree.column("Folder", width=300)
-        self.pattern_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        layout.addWidget(ext_group)
         
-        pattern_scroll.config(command=self.pattern_tree.yview)
+        # Pattern rules section
+        pattern_group = QGroupBox("Filename Pattern Rules")
+        pattern_layout = QVBoxLayout(pattern_group)
         
-        # Buttons for patterns
-        pattern_buttons_frame = ttk.Frame(pattern_frame)
-        pattern_buttons_frame.pack(fill=tk.X, pady=5)
+        # Tree widget for pattern rules
+        self.pattern_tree = QTreeWidget()
+        self.pattern_tree.setHeaderLabels(["Pattern", "Target Folder"])
+        self.pattern_tree.setColumnWidth(0, 100)
+        pattern_layout.addWidget(self.pattern_tree)
         
-        ttk.Button(pattern_buttons_frame, text="Add Pattern", command=self._add_pattern_rule).pack(side=tk.LEFT, padx=5)
-        ttk.Button(pattern_buttons_frame, text="Edit Pattern", command=self._edit_pattern_rule).pack(side=tk.LEFT, padx=5)
-        ttk.Button(pattern_buttons_frame, text="Remove Pattern", command=self._remove_pattern_rule).pack(side=tk.LEFT, padx=5)
+        # Buttons for pattern rules
+        pattern_btn_layout = QHBoxLayout()
         
-        # "Other" files configuration
-        other_frame = ttk.LabelFrame(self.rules_tab, text="Uncategorized Files", padding="10")
-        other_frame.pack(fill=tk.X, pady=5)
+        add_pattern_btn = QPushButton("Add Pattern")
+        add_pattern_btn.clicked.connect(self._add_pattern_rule)
+        pattern_btn_layout.addWidget(add_pattern_btn)
         
-        ttk.Label(other_frame, text="Folder for uncategorized files:").pack(side=tk.LEFT, padx=5)
+        edit_pattern_btn = QPushButton("Edit Pattern")
+        edit_pattern_btn.clicked.connect(self._edit_pattern_rule)
+        pattern_btn_layout.addWidget(edit_pattern_btn)
         
-        self.other_folder_var = tk.StringVar(value="Unsorted")
-        ttk.Entry(other_frame, textvariable=self.other_folder_var, width=30).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        remove_pattern_btn = QPushButton("Remove Pattern")
+        remove_pattern_btn.clicked.connect(self._remove_pattern_rule)
+        pattern_btn_layout.addWidget(remove_pattern_btn)
+        
+        pattern_btn_layout.addStretch(1)
+        pattern_layout.addLayout(pattern_btn_layout)
+        
+        layout.addWidget(pattern_group)
+        
+        # Other files section
+        other_group = QGroupBox("Uncategorized Files")
+        other_layout = QHBoxLayout(other_group)
+        
+        other_layout.addWidget(QLabel("Folder for uncategorized files:"))
+        
+        self.other_folder_edit = QLineEdit("Unsorted")
+        other_layout.addWidget(self.other_folder_edit, 1)
+        
+        layout.addWidget(other_group)
     
     def _build_monitor_tab(self):
         """Build the monitoring tab UI."""
-        # Monitoring options frame
-        monitor_frame = ttk.LabelFrame(self.monitor_tab, text="File Monitoring Settings", padding="10")
-        monitor_frame.pack(fill=tk.X, pady=5)
+        layout = QVBoxLayout(self.monitor_tab)
+        
+        # Monitoring options
+        monitor_group = QGroupBox("File Monitoring Settings")
+        monitor_layout = QVBoxLayout(monitor_group)
         
         # Enable monitoring checkbox
-        self.monitoring_enabled_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(
-            monitor_frame, 
-            text="Enable automatic monitoring", 
-            variable=self.monitoring_enabled_var
-        ).pack(anchor=tk.W, pady=5)
+        self.monitoring_enabled_check = QCheckBox("Enable automatic monitoring")
+        monitor_layout.addWidget(self.monitoring_enabled_check)
         
-        # Monitoring type
-        monitor_type_frame = ttk.Frame(monitor_frame)
-        monitor_type_frame.pack(fill=tk.X, pady=5)
+        # Monitor type
+        monitor_type_layout = QVBoxLayout()
+        monitor_type_layout.addWidget(QLabel("Monitoring Type:"))
         
-        ttk.Label(monitor_type_frame, text="Monitoring Type:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        self.scheduled_radio = QRadioButton("Scheduled (periodic checks)")
+        self.scheduled_radio.setChecked(True)
+        self.realtime_radio = QRadioButton("Real-time (immediate processing)")
         
-        self.monitor_type_var = tk.StringVar(value="scheduled")
-        ttk.Radiobutton(
-            monitor_type_frame, 
-            text="Scheduled (periodic checks)", 
-            variable=self.monitor_type_var, 
-            value="scheduled"
-        ).grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
+        monitor_type_layout.addWidget(self.scheduled_radio)
+        monitor_type_layout.addWidget(self.realtime_radio)
         
-        ttk.Radiobutton(
-            monitor_type_frame, 
-            text="Real-time (immediate processing)", 
-            variable=self.monitor_type_var, 
-            value="realtime"
-        ).grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        monitor_layout.addLayout(monitor_type_layout)
+        layout.addWidget(monitor_group)
         
         # Interval settings
-        interval_frame = ttk.LabelFrame(self.monitor_tab, text="Schedule Settings", padding="10")
-        interval_frame.pack(fill=tk.X, pady=5)
+        interval_group = QGroupBox("Schedule Settings")
+        interval_layout = QHBoxLayout(interval_group)
         
-        ttk.Label(interval_frame, text="Check interval (seconds):").pack(side=tk.LEFT, padx=5)
+        interval_layout.addWidget(QLabel("Check interval (seconds):"))
         
-        self.interval_var = tk.IntVar(value=3600)
-        interval_spinner = ttk.Spinbox(
-            interval_frame, 
-            from_=60, 
-            to=86400, 
-            increment=60, 
-            textvariable=self.interval_var, 
-            width=10
-        )
-        interval_spinner.pack(side=tk.LEFT, padx=5)
+        self.interval_spin = QSpinBox()
+        self.interval_spin.setRange(60, 86400)  # 1 minute to 24 hours
+        self.interval_spin.setValue(3600)
+        self.interval_spin.setSingleStep(60)
+        interval_layout.addWidget(self.interval_spin)
         
-        # Common intervals
-        ttk.Label(interval_frame, text="Presets:").pack(side=tk.LEFT, padx=(20, 5))
+        # Preset intervals
+        interval_layout.addWidget(QLabel("Presets:"))
         
-        ttk.Button(
-            interval_frame, 
-            text="5 min", 
-            command=lambda: self.interval_var.set(300)
-        ).pack(side=tk.LEFT, padx=2)
+        preset_5min = QPushButton("5 min")
+        preset_5min.clicked.connect(lambda: self.interval_spin.setValue(300))
+        interval_layout.addWidget(preset_5min)
         
-        ttk.Button(
-            interval_frame, 
-            text="30 min", 
-            command=lambda: self.interval_var.set(1800)
-        ).pack(side=tk.LEFT, padx=2)
+        preset_30min = QPushButton("30 min")
+        preset_30min.clicked.connect(lambda: self.interval_spin.setValue(1800))
+        interval_layout.addWidget(preset_30min)
         
-        ttk.Button(
-            interval_frame, 
-            text="1 hour", 
-            command=lambda: self.interval_var.set(3600)
-        ).pack(side=tk.LEFT, padx=2)
+        preset_1hr = QPushButton("1 hour")
+        preset_1hr.clicked.connect(lambda: self.interval_spin.setValue(3600))
+        interval_layout.addWidget(preset_1hr)
         
-        ttk.Button(
-            interval_frame, 
-            text="6 hours", 
-            command=lambda: self.interval_var.set(21600)
-        ).pack(side=tk.LEFT, padx=2)
+        preset_6hr = QPushButton("6 hours")
+        preset_6hr.clicked.connect(lambda: self.interval_spin.setValue(21600))
+        interval_layout.addWidget(preset_6hr)
         
-        ttk.Button(
-            interval_frame, 
-            text="12 hours", 
-            command=lambda: self.interval_var.set(43200)
-        ).pack(side=tk.LEFT, padx=2)
+        preset_12hr = QPushButton("12 hours")
+        preset_12hr.clicked.connect(lambda: self.interval_spin.setValue(43200))
+        interval_layout.addWidget(preset_12hr)
+        
+        interval_layout.addStretch(1)
+        layout.addWidget(interval_group)
         
         # Monitoring control buttons
-        control_frame = ttk.Frame(self.monitor_tab)
-        control_frame.pack(fill=tk.X, pady=20)
+        control_layout = QHBoxLayout()
         
-        self.start_button = ttk.Button(
-            control_frame, 
-            text="Start Monitoring", 
-            command=self._start_monitoring
-        )
-        self.start_button.pack(side=tk.LEFT, padx=5)
+        self.start_monitor_btn = QPushButton("Start Monitoring")
+        self.start_monitor_btn.clicked.connect(self._start_monitoring)
+        control_layout.addWidget(self.start_monitor_btn)
         
-        self.stop_button = ttk.Button(
-            control_frame, 
-            text="Stop Monitoring", 
-            command=self._stop_monitoring,
-            state=tk.DISABLED
-        )
-        self.stop_button.pack(side=tk.LEFT, padx=5)
+        self.stop_monitor_btn = QPushButton("Stop Monitoring")
+        self.stop_monitor_btn.clicked.connect(self._stop_monitoring)
+        self.stop_monitor_btn.setEnabled(False)
+        control_layout.addWidget(self.stop_monitor_btn)
+        
+        control_layout.addStretch(1)
+        layout.addLayout(control_layout)
         
         # Monitor status
-        status_frame = ttk.LabelFrame(self.monitor_tab, text="Monitoring Status", padding="10")
-        status_frame.pack(fill=tk.X, pady=5)
+        status_group = QGroupBox("Monitoring Status")
+        status_layout = QVBoxLayout(status_group)
         
-        self.monitor_status_var = tk.StringVar(value="Monitoring is currently disabled")
-        ttk.Label(
-            status_frame, 
-            textvariable=self.monitor_status_var, 
-            font=("", 10, "bold")
-        ).pack(fill=tk.X, padx=5, pady=10)
+        self.monitor_status_label = QLabel("Monitoring is currently disabled")
+        self.monitor_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont("Arial", 10)
+        font.setBold(True)
+        self.monitor_status_label.setFont(font)
+        status_layout.addWidget(self.monitor_status_label)
+        
+        layout.addWidget(status_group)
+        layout.addStretch(1)
     
     def _build_logs_tab(self):
         """Build the logs tab UI."""
-        # Search frame
-        search_frame = ttk.Frame(self.logs_tab)
-        search_frame.pack(fill=tk.X, pady=5)
+        layout = QVBoxLayout(self.logs_tab)
         
-        ttk.Label(search_frame, text="Search logs:").pack(side=tk.LEFT, padx=5)
+        # Search section
+        search_layout = QHBoxLayout()
+        search_layout.addWidget(QLabel("Search logs:"))
         
-        self.search_var = tk.StringVar()
-        ttk.Entry(search_frame, textvariable=self.search_var, width=30).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        self.search_edit = QLineEdit()
+        search_layout.addWidget(self.search_edit, 1)
         
-        ttk.Button(
-            search_frame,
-            text="Search",
-            command=self._search_logs
-        ).pack(side=tk.LEFT, padx=5)
+        search_btn = QPushButton("Search")
+        search_btn.clicked.connect(self._search_logs)
+        search_layout.addWidget(search_btn)
         
-        # Log type filter
-        filter_frame = ttk.Frame(self.logs_tab)
-        filter_frame.pack(fill=tk.X, pady=5)
+        layout.addLayout(search_layout)
         
-        ttk.Label(filter_frame, text="Filter by:").pack(side=tk.LEFT, padx=5)
+        # Log filter options
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(QLabel("Filter by:"))
         
-        self.log_type_var = tk.StringVar(value="all")
-        ttk.Radiobutton(filter_frame, text="All", variable=self.log_type_var, value="all").pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(filter_frame, text="Information", variable=self.log_type_var, value="output").pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(filter_frame, text="Errors", variable=self.log_type_var, value="error").pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(filter_frame, text="User Input", variable=self.log_type_var, value="input").pack(side=tk.LEFT, padx=5)
+        self.filter_all_radio = QRadioButton("All")
+        self.filter_all_radio.setChecked(True)
+        filter_layout.addWidget(self.filter_all_radio)
+        
+        self.filter_info_radio = QRadioButton("Information")
+        filter_layout.addWidget(self.filter_info_radio)
+        
+        self.filter_error_radio = QRadioButton("Errors")
+        filter_layout.addWidget(self.filter_error_radio)
+        
+        self.filter_input_radio = QRadioButton("User Input")
+        filter_layout.addWidget(self.filter_input_radio)
+        
+        # Add radio buttons to group for mutual exclusivity
+        self.filter_group = QButtonGroup()
+        self.filter_group.addButton(self.filter_all_radio)
+        self.filter_group.addButton(self.filter_info_radio)
+        self.filter_group.addButton(self.filter_error_radio)
+        self.filter_group.addButton(self.filter_input_radio)
+        
+        filter_layout.addStretch(1)
+        layout.addLayout(filter_layout)
         
         # Log viewer
-        log_view_frame = ttk.LabelFrame(self.logs_tab, text="Log Messages", padding="10")
-        log_view_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        log_group = QGroupBox("Log Messages")
+        log_layout = QVBoxLayout(log_group)
         
-        # Scrolled text widget for logs
-        self.log_text = scrolledtext.ScrolledText(log_view_frame)
-        self.log_text.pack(fill=tk.BOTH, expand=True)
-        self.log_text.config(state=tk.DISABLED)  # Make it read-only
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        log_layout.addWidget(self.log_text)
         
-        # Log control buttons
-        log_buttons_frame = ttk.Frame(self.logs_tab)
-        log_buttons_frame.pack(fill=tk.X, pady=5)
+        layout.addWidget(log_group, 1)
         
-        ttk.Button(
-            log_buttons_frame,
-            text="Refresh Logs",
-            command=self._refresh_logs
-        ).pack(side=tk.LEFT, padx=5)
+        # Control buttons
+        log_btn_layout = QHBoxLayout()
         
-        ttk.Button(
-            log_buttons_frame,
-            text="Clear Display",
-            command=self._clear_log_display
-        ).pack(side=tk.LEFT, padx=5)
+        refresh_log_btn = QPushButton("Refresh Logs")
+        refresh_log_btn.clicked.connect(self._refresh_logs)
+        log_btn_layout.addWidget(refresh_log_btn)
         
-        ttk.Button(
-            log_buttons_frame,
-            text="Open Log File",
-            command=self._open_log_file
-        ).pack(side=tk.RIGHT, padx=5)
+        clear_log_btn = QPushButton("Clear Display")
+        clear_log_btn.clicked.connect(self._clear_log_display)
+        log_btn_layout.addWidget(clear_log_btn)
+        
+        log_btn_layout.addStretch(1)
+        
+        open_log_btn = QPushButton("Open Log File")
+        open_log_btn.clicked.connect(self._open_log_file)
+        log_btn_layout.addWidget(open_log_btn)
+        
+        layout.addLayout(log_btn_layout)
     
     def _build_about_tab(self):
         """Build the about tab UI."""
-        about_frame = ttk.Frame(self.about_tab, padding="20")
-        about_frame.pack(fill=tk.BOTH, expand=True)
+        layout = QVBoxLayout(self.about_tab)
         
-        # App title and version
-        title_label = ttk.Label(
-            about_frame, 
-            text="File Organizer", 
-            font=("", 16, "bold")
-        )
-        title_label.pack(pady=10)
+        # Logo area (if you have a logo)
+        # logo_label = QLabel()
+        # logo_pixmap = QPixmap("path/to/logo.png")
+        # logo_label.setPixmap(logo_pixmap)
+        # logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # layout.addWidget(logo_label)
         
-        version_label = ttk.Label(
-            about_frame, 
-            text="Version 1.0"
-        )
-        version_label.pack()
+        # App title
+        title_label = QLabel("The Manchester United File Organiser System")
+        title_font = QFont("Arial", 16)
+        title_font.setBold(True)
+        title_label.setFont(title_font)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title_label)
+        
+        # Version
+        version_label = QLabel("Version 1.0")
+        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(version_label)
         
         # Description
         description = """
-        File Organizer is a utility to automatically sort files into folders 
+        The Manchester United File Organiser System is a utility to automatically sort files into folders 
         based on file types and naming patterns.
         
         Features:
@@ -818,318 +1010,372 @@ class FileOrganizerApp:
         • Real-time or scheduled monitoring
         • Detailed logging and activity tracking
         
-        This application was built using Python and Tkinter.
+        This application was built using Python and PyQt6.
         """
         
-        desc_label = ttk.Label(
-            about_frame,
-            text=description,
-            wraplength=500,
-            justify=tk.CENTER
-        )
-        desc_label.pack(pady=20)
+        desc_label = QLabel(description)
+        desc_label.setWordWrap(True)
+        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(desc_label)
         
         # Credits
-        credits_label = ttk.Label(
-            about_frame,
-            text="Created by: Umair\n© 2025",
-            justify=tk.CENTER
-        )
-        credits_label.pack(pady=10)
-
+        credits_label = QLabel("Developed by: Akhtar Hasan Software Solutions\n© 2025")
+        credits_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(credits_label)
+        
         # App directory info
-        app_dir_label = ttk.Label(
-            about_frame,
-            text=f"Application Directory:\n{APP_DIR}",
-            justify=tk.CENTER,
-            font=("", 8)
-        )
-        app_dir_label.pack(pady=20)
-
+        app_dir_label = QLabel(f"Application Directory:\n{APP_DIR}")
+        app_dir_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        app_dir_font = QFont("Arial", 8)
+        app_dir_label.setFont(app_dir_font)
+        layout.addWidget(app_dir_label)
+        
+        layout.addStretch(1)
+    
     def _load_config_to_ui(self):
         """Load configuration into the UI elements."""
         # Source directory
-        self.source_dir_var.set(self.config.get('source_directory', ''))
+        self.source_dir_edit.setText(self.config.get('source_directory', ''))
+
+        # Destination directory
+        self.dest_dir_edit.setText(self.config.get('destination_directory', ''))
         
         # File action
-        self.action_var.set(self.config.get('file_action', 'move'))
+        if self.config.get('file_action') == 'copy':
+            self.copy_radio.setChecked(True)
+        else:
+            self.move_radio.setChecked(True)
         
-        # Monitoring
+        # Monitoring settings
         monitoring = self.config.get('monitoring', {})
-        self.monitoring_enabled_var.set(monitoring.get('enabled', False))
-        self.monitor_type_var.set(monitoring.get('type', 'scheduled'))
-        self.interval_var.set(monitoring.get('interval', 3600))
+        self.monitoring_enabled_check.setChecked(monitoring.get('enabled', False))
+        
+        if monitoring.get('type') == 'realtime':
+            self.realtime_radio.setChecked(True)
+        else:
+            self.scheduled_radio.setChecked(True)
+        
+        self.interval_spin.setValue(monitoring.get('interval', 3600))
         
         # Other folder
-        self.other_folder_var.set(self.config.get('sorting_rules', {}).get('other', 'Unsorted'))
+        self.other_folder_edit.setText(self.config.get('sorting_rules', {}).get('other', 'Unsorted'))
         
         # Extension rules
-        self.ext_tree.delete(*self.ext_tree.get_children())
+        self.ext_tree.clear()
         for ext, folder in self.config.get('sorting_rules', {}).get('extensions', {}).items():
-            self.ext_tree.insert('', tk.END, values=(ext, folder))
-            
+            item = QTreeWidgetItem([ext, folder])
+            self.ext_tree.addTopLevelItem(item)
+        
         # Pattern rules
-        self.pattern_tree.delete(*self.pattern_tree.get_children())
+        self.pattern_tree.clear()
         for pattern, folder in self.config.get('sorting_rules', {}).get('patterns', {}).items():
-            self.pattern_tree.insert('', tk.END, values=(pattern, folder))
+            item = QTreeWidgetItem([pattern, folder])
+            self.pattern_tree.addTopLevelItem(item)
         
         # Update monitoring status
         self._update_monitoring_status()
         
-        # Load recent logs
+        # Display logs
         self._refresh_logs()
         self._refresh_activity_logs()
     
-    def _browse_directory(self):
+    def _browse_directory(self, directory_type="source"):
         """Open directory browser dialog."""
-        directory = filedialog.askdirectory(initialdir=self.source_dir_var.get())
-        if directory:
-            self.source_dir_var.set(directory)
+        if directory_type == "source":
+            current_dir = self.source_dir_edit.text()
+            directory = QFileDialog.getExistingDirectory(self, "Select Source Directory", current_dir)
+            if directory:
+                self.source_dir_edit.setText(directory)
+        else:  # destination
+            current_dir = self.dest_dir_edit.text()
+            directory = QFileDialog.getExistingDirectory(self, "Select Destination Directory", current_dir)
+            if directory:
+                self.dest_dir_edit.setText(directory)
+    
+    def _create_input_dialog(self, title, label1, label2, value1="", value2=""):
+        """Create a reusable input dialog for rules."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(title)
+        dialog.resize(400, 150)
+        
+        layout = QVBoxLayout(dialog)
+        
+        form_layout = QVBoxLayout()
+        
+        label1_widget = QLabel(label1)
+        input1 = QLineEdit(value1)
+        form_layout.addWidget(label1_widget)
+        form_layout.addWidget(input1)
+        
+        label2_widget = QLabel(label2)
+        input2 = QLineEdit(value2)
+        form_layout.addWidget(label2_widget)
+        form_layout.addWidget(input2)
+        
+        layout.addLayout(form_layout)
+        
+        buttons = QHBoxLayout()
+        ok_button = QPushButton("Save")
+        cancel_button = QPushButton("Cancel")
+        
+        buttons.addStretch(1)
+        buttons.addWidget(ok_button)
+        buttons.addWidget(cancel_button)
+        
+        layout.addLayout(buttons)
+        
+        ok_button.clicked.connect(dialog.accept)
+        cancel_button.clicked.connect(dialog.reject)
+        
+        return dialog, input1, input2
     
     def _add_extension_rule(self):
         """Add a new extension rule."""
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Add Extension Rule")
-        dialog.geometry("400x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
+        dialog, ext_input, folder_input = self._create_input_dialog(
+            "Add Extension Rule",
+            "File Extension:",
+            "Target Folder:"
+        )
         
-        ttk.Label(dialog, text="File Extension:").grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
-        ext_var = tk.StringVar()
-        ttk.Entry(dialog, textvariable=ext_var, width=20).grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        ttk.Label(dialog, text="Target Folder:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
-        folder_var = tk.StringVar()
-        ttk.Entry(dialog, textvariable=folder_var, width=30).grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        def save_rule():
-            ext = ext_var.get().strip()
-            folder = folder_var.get().strip()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            ext = ext_input.text().strip()
+            folder = folder_input.text().strip()
             
             if not ext or not folder:
-                messagebox.showerror("Error", "Both fields are required.")
+                QMessageBox.critical(self, "Error", "Both fields are required.")
                 return
-                
-            self.ext_tree.insert('', tk.END, values=(ext, folder))
-            dialog.destroy()
             
-        ttk.Button(dialog, text="Save", command=save_rule).grid(row=2, column=0, columnspan=2, pady=10)
+            item = QTreeWidgetItem([ext, folder])
+            self.ext_tree.addTopLevelItem(item)
     
     def _edit_extension_rule(self):
         """Edit selected extension rule."""
-        selected = self.ext_tree.selection()
-        if not selected:
-            messagebox.showinfo("Info", "Please select a rule to edit.")
+        selected_items = self.ext_tree.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "Info", "Please select a rule to edit.")
             return
-            
-        item = self.ext_tree.item(selected[0])
-        ext, folder = item['values']
         
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Edit Extension Rule")
-        dialog.geometry("400x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
+        item = selected_items[0]
+        ext = item.text(0)
+        folder = item.text(1)
         
-        ttk.Label(dialog, text="File Extension:").grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
-        ext_var = tk.StringVar(value=ext)
-        ttk.Entry(dialog, textvariable=ext_var, width=20).grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
+        dialog, ext_input, folder_input = self._create_input_dialog(
+            "Edit Extension Rule",
+            "File Extension:",
+            "Target Folder:",
+            ext,
+            folder
+        )
         
-        ttk.Label(dialog, text="Target Folder:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
-        folder_var = tk.StringVar(value=folder)
-        ttk.Entry(dialog, textvariable=folder_var, width=30).grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        def update_rule():
-            new_ext = ext_var.get().strip()
-            new_folder = folder_var.get().strip()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_ext = ext_input.text().strip()
+            new_folder = folder_input.text().strip()
             
             if not new_ext or not new_folder:
-                messagebox.showerror("Error", "Both fields are required.")
+                QMessageBox.critical(self, "Error", "Both fields are required.")
                 return
-                
-            self.ext_tree.item(selected[0], values=(new_ext, new_folder))
-            dialog.destroy()
             
-        ttk.Button(dialog, text="Update", command=update_rule).grid(row=2, column=0, columnspan=2, pady=10)
+            item.setText(0, new_ext)
+            item.setText(1, new_folder)
     
     def _remove_extension_rule(self):
         """Remove selected extension rule."""
-        selected = self.ext_tree.selection()
-        if not selected:
-            messagebox.showinfo("Info", "Please select a rule to remove.")
+        selected_items = self.ext_tree.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "Info", "Please select a rule to remove.")
             return
-            
-        self.ext_tree.delete(selected[0])
+        
+        item = selected_items[0]
+        index = self.ext_tree.indexOfTopLevelItem(item)
+        self.ext_tree.takeTopLevelItem(index)
     
     def _add_pattern_rule(self):
         """Add a new pattern rule."""
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Add Pattern Rule")
-        dialog.geometry("400x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
+        dialog, pattern_input, folder_input = self._create_input_dialog(
+            "Add Pattern Rule",
+            "Filename Pattern:",
+            "Target Folder:"
+        )
         
-        ttk.Label(dialog, text="Filename Pattern:").grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
-        pattern_var = tk.StringVar()
-        ttk.Entry(dialog, textvariable=pattern_var, width=20).grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        ttk.Label(dialog, text="Target Folder:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
-        folder_var = tk.StringVar()
-        ttk.Entry(dialog, textvariable=folder_var, width=30).grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        def save_rule():
-            pattern = pattern_var.get().strip()
-            folder = folder_var.get().strip()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            pattern = pattern_input.text().strip()
+            folder = folder_input.text().strip()
             
             if not pattern or not folder:
-                messagebox.showerror("Error", "Both fields are required.")
+                QMessageBox.critical(self, "Error", "Both fields are required.")
                 return
-                
-            self.pattern_tree.insert('', tk.END, values=(pattern, folder))
-            dialog.destroy()
             
-        ttk.Button(dialog, text="Save", command=save_rule).grid(row=2, column=0, columnspan=2, pady=10)
+            item = QTreeWidgetItem([pattern, folder])
+            self.pattern_tree.addTopLevelItem(item)
     
     def _edit_pattern_rule(self):
         """Edit selected pattern rule."""
-        selected = self.pattern_tree.selection()
-        if not selected:
-            messagebox.showinfo("Info", "Please select a pattern to edit.")
+        selected_items = self.pattern_tree.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "Info", "Please select a pattern to edit.")
             return
-            
-        item = self.pattern_tree.item(selected[0])
-        pattern, folder = item['values']
         
-        dialog = tk.Toplevel(self.root)
-        dialog.title("Edit Pattern Rule")
-        dialog.geometry("400x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
+        item = selected_items[0]
+        pattern = item.text(0)
+        folder = item.text(1)
         
-        ttk.Label(dialog, text="Filename Pattern:").grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
-        pattern_var = tk.StringVar(value=pattern)
-        ttk.Entry(dialog, textvariable=pattern_var, width=20).grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
+        dialog, pattern_input, folder_input = self._create_input_dialog(
+            "Edit Pattern Rule",
+            "Filename Pattern:",
+            "Target Folder:",
+            pattern,
+            folder
+        )
         
-        ttk.Label(dialog, text="Target Folder:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
-        folder_var = tk.StringVar(value=folder)
-        ttk.Entry(dialog, textvariable=folder_var, width=30).grid(row=1, column=1, padx=10, pady=10, sticky=tk.W)
-        
-        def update_rule():
-            new_pattern = pattern_var.get().strip()
-            new_folder = folder_var.get().strip()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_pattern = pattern_input.text().strip()
+            new_folder = folder_input.text().strip()
             
             if not new_pattern or not new_folder:
-                messagebox.showerror("Error", "Both fields are required.")
+                QMessageBox.critical(self, "Error", "Both fields are required.")
                 return
-                
-            self.pattern_tree.item(selected[0], values=(new_pattern, new_folder))
-            dialog.destroy()
             
-        ttk.Button(dialog, text="Update", command=update_rule).grid(row=2, column=0, columnspan=2, pady=10)
+            item.setText(0, new_pattern)
+            item.setText(1, new_folder)
     
     def _remove_pattern_rule(self):
         """Remove selected pattern rule."""
-        selected = self.pattern_tree.selection()
-        if not selected:
-            messagebox.showinfo("Info", "Please select a pattern to remove.")
+        selected_items = self.pattern_tree.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "Info", "Please select a pattern to remove.")
             return
-            
-        self.pattern_tree.delete(selected[0])
+        
+        item = selected_items[0]
+        index = self.pattern_tree.indexOfTopLevelItem(item)
+        self.pattern_tree.takeTopLevelItem(index)
     
     def _save_config(self):
         """Save current UI state to configuration."""
         try:
             # Build extension rules
             extensions = {}
-            for item_id in self.ext_tree.get_children():
-                item = self.ext_tree.item(item_id)
-                ext, folder = item['values']
-                extensions[ext] = folder
+            for i in range(self.ext_tree.topLevelItemCount()):
+                item = self.ext_tree.topLevelItem(i)
+                extensions[item.text(0)] = item.text(1)
             
             # Build pattern rules
             patterns = {}
-            for item_id in self.pattern_tree.get_children():
-                item = self.pattern_tree.item(item_id)
-                pattern, folder = item['values']
-                patterns[pattern] = folder
+            for i in range(self.pattern_tree.topLevelItemCount()):
+                item = self.pattern_tree.topLevelItem(i)
+                patterns[item.text(0)] = item.text(1)
             
             # Build complete config
             config = {
-                'source_directory': self.source_dir_var.get(),
-                'file_action': self.action_var.get(),
+                'source_directory': self.source_dir_edit.text(),
+                'destination_directory': self.dest_dir_edit.text(),
+                'file_action': 'copy' if self.copy_radio.isChecked() else 'move',
                 'monitoring': {
-                    'enabled': self.monitoring_enabled_var.get(),
-                    'type': self.monitor_type_var.get(),
-                    'interval': self.interval_var.get()
+                    'enabled': self.monitoring_enabled_check.isChecked(),
+                    'type': 'realtime' if self.realtime_radio.isChecked() else 'scheduled',
+                    'interval': self.interval_spin.value()
                 },
                 'sorting_rules': {
                     'extensions': extensions,
                     'patterns': patterns,
-                    'other': self.other_folder_var.get() or 'Unsorted'
+                    'other': self.other_folder_edit.text() or 'Unsorted'
                 }
             }
             
             # Save to file
             if self.config_manager.save_config(config):
-                messagebox.showinfo("Success", "Configuration saved successfully.")
+                QMessageBox.information(self, "Success", "Configuration saved successfully.")
                 self.config = config
+                
                 # Update file sorter with new config
                 self.file_sorter.__init__(config)
                 
-                # Update file watcher with new config if it's running
+                # Update file watcher with new config if running
                 if self.file_watcher.running:
                     self.file_watcher.stop()
                     self.file_watcher.__init__(config, self.file_sorter)
                     self.file_watcher.start()
                 else:
                     self.file_watcher.__init__(config, self.file_sorter)
-                    
+                
                 # Update status
                 self._update_monitoring_status()
-                self.status_var.set("Configuration saved successfully")
+                self.status_bar.showMessage("Configuration saved successfully")
             else:
-                messagebox.showerror("Error", "Failed to save configuration.")
-                self.status_var.set("Failed to save configuration")
+                QMessageBox.critical(self, "Error", "Failed to save configuration.")
+                self.status_bar.showMessage("Failed to save configuration")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while saving: {str(e)}")
+            QMessageBox.critical(self, "Error", f"An error occurred while saving: {str(e)}")
             logger.error(f"Error saving configuration: {str(e)}")
-            self.status_var.set(f"Error: {str(e)}")
+            self.status_bar.showMessage(f"Error: {str(e)}")
     
     def _run_sorting(self):
         """Execute file sorting operation."""
-        source_dir = self.source_dir_var.get()
+        source_dir = self.source_dir_edit.text()
+        dest_dir = self.dest_dir_edit.text()
+        
         if not source_dir:
-            messagebox.showerror("Error", "Please specify a source directory.")
+            QMessageBox.critical(self, "Error", "Please specify a source directory.")
             return
-            
+        
         if not Path(source_dir).exists():
-            messagebox.showerror("Error", "Source directory does not exist.")
+            QMessageBox.critical(self, "Error", "Source directory does not exist.")
             return
+        
+        # Show message about destination directory defaulting to source
+        if not dest_dir:
+            QMessageBox.information(
+                self,
+                "Destination Directory",
+                "No destination directory specified. Files will be organized within the source directory."
+            )
+            # Ensure the config reflects this
+            self.dest_dir_edit.setText("")  # Clear any potential whitespace
+        elif not Path(dest_dir).exists():
+            reply = QMessageBox.question(
+                self, 
+                "Destination Directory", 
+                "The specified destination directory doesn't exist. Would you like to create it?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                try:
+                    Path(dest_dir).mkdir(parents=True, exist_ok=True)
+                    logger.info(f"Created destination directory: {dest_dir}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to create destination directory: {str(e)}")
+                    logger.error(f"Failed to create destination directory: {str(e)}")
+                    return
+            else:
+                return
         
         # First, save the current configuration
         self._save_config()
         
         # Update status
-        self.status_var.set("Sorting files...")
+        self.status_bar.showMessage("Sorting files...")
         
-        # Run sorting in a separate thread to keep UI responsive
-        def sorting_thread():
-            try:
-                success = self.file_sorter.sort_files()
-                if success:
-                    messagebox.showinfo("Success", "Files organized successfully!")
-                    self.status_var.set("Files organized successfully")
-                    self._refresh_activity_logs()  # Refresh the activity log
-                else:
-                    messagebox.showerror("Error", "Failed to organize files. Check logs for details.")
-                    self.status_var.set("Failed to organize files")
-            except Exception as e:
-                messagebox.showerror("Error", f"An error occurred: {str(e)}")
-                logger.error(f"Error during sorting operation: {str(e)}", exc_info=True)
-                self.status_var.set(f"Error: {str(e)}")
+        # Run sorting in a separate thread
+        self.sorter_thread = SorterThread(self.file_sorter)
         
-        threading.Thread(target=sorting_thread).start()
+        def on_success(success):
+            if success:
+                QMessageBox.information(self, "Success", "Files organized successfully!")
+                self.status_bar.showMessage("Files organized successfully")
+                self._refresh_activity_logs()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to organize files. Check logs for details.")
+                self.status_bar.showMessage("Failed to organize files")
+        
+        def on_error(error_msg):
+            QMessageBox.critical(self, "Error", f"An error occurred: {error_msg}")
+            self.status_bar.showMessage(f"Error: {error_msg}")
+        
+        self.sorter_thread.finished.connect(on_success)
+        self.sorter_thread.error.connect(on_error)
+        self.sorter_thread.start()
     
     def _start_monitoring(self):
         """Start the file watcher."""
@@ -1137,45 +1383,45 @@ class FileOrganizerApp:
         self._save_config()
         
         # Check if source directory is valid
-        source_dir = self.source_dir_var.get()
+        source_dir = self.source_dir_edit.text()
         if not source_dir:
-            messagebox.showerror("Error", "Please specify a source directory.")
+            QMessageBox.critical(self, "Error", "Please specify a source directory.")
             return
-            
+        
         if not Path(source_dir).exists():
-            messagebox.showerror("Error", "Source directory does not exist.")
+            QMessageBox.critical(self, "Error", "Source directory does not exist.")
             return
         
         # Start monitoring
         try:
             success = self.file_watcher.start()
             if success:
-                messagebox.showinfo("Success", "File monitoring started.")
-                self.start_button.config(state=tk.DISABLED)
-                self.stop_button.config(state=tk.NORMAL)
+                QMessageBox.information(self, "Success", "File monitoring started.")
+                self.start_monitor_btn.setEnabled(False)
+                self.stop_monitor_btn.setEnabled(True)
                 self._update_monitoring_status()
-                self.status_var.set("Monitoring started successfully")
+                self.status_bar.showMessage("Monitoring started successfully")
             else:
-                messagebox.showerror("Error", "Failed to start monitoring. Check logs for details.")
-                self.status_var.set("Failed to start monitoring")
+                QMessageBox.critical(self, "Error", "Failed to start monitoring. Check logs for details.")
+                self.status_bar.showMessage("Failed to start monitoring")
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
             logger.error(f"Error starting monitoring: {str(e)}", exc_info=True)
-            self.status_var.set(f"Error: {str(e)}")
+            self.status_bar.showMessage(f"Error: {str(e)}")
     
     def _stop_monitoring(self):
         """Stop the file watcher."""
         try:
             self.file_watcher.stop()
-            messagebox.showinfo("Success", "File monitoring stopped.")
-            self.start_button.config(state=tk.NORMAL)
-            self.stop_button.config(state=tk.DISABLED)
+            QMessageBox.information(self, "Success", "File monitoring stopped.")
+            self.start_monitor_btn.setEnabled(True)
+            self.stop_monitor_btn.setEnabled(False)
             self._update_monitoring_status()
-            self.status_var.set("Monitoring stopped")
+            self.status_bar.showMessage("Monitoring stopped")
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
             logger.error(f"Error stopping monitoring: {str(e)}", exc_info=True)
-            self.status_var.set(f"Error: {str(e)}")
+            self.status_bar.showMessage(f"Error: {str(e)}")
     
     def _update_monitoring_status(self):
         """Update the monitoring status display."""
@@ -1186,19 +1432,30 @@ class FileOrganizerApp:
                 interval = self.file_watcher.config.get('monitoring', {}).get('interval', 3600)
                 status = f"Scheduled monitoring is active (checking every {interval} seconds)"
             
-            self.monitor_status_var.set(status)
-            self.start_button.config(state=tk.DISABLED)
-            self.stop_button.config(state=tk.NORMAL)
+            self.monitor_status_label.setText(status)
+            self.start_monitor_btn.setEnabled(False)
+            self.stop_monitor_btn.setEnabled(True)
         else:
-            self.monitor_status_var.set("Monitoring is currently disabled")
-            self.start_button.config(state=tk.NORMAL)
-            self.stop_button.config(state=tk.DISABLED)
+            self.monitor_status_label.setText("Monitoring is currently disabled")
+            self.start_monitor_btn.setEnabled(True)
+            self.stop_monitor_btn.setEnabled(False)
+    
+    def _get_selected_log_type(self):
+        """Get the selected log type from radio buttons."""
+        if self.filter_info_radio.isChecked():
+            return "output"
+        elif self.filter_error_radio.isChecked():
+            return "error"
+        elif self.filter_input_radio.isChecked():
+            return "input"
+        else:
+            return "all"  # Default
     
     def _refresh_logs(self):
         """Refresh the log display in the logs tab."""
         try:
-            log_type = self.log_type_var.get()
-            search_term = self.search_var.get().strip()
+            log_type = self._get_selected_log_type()
+            search_term = self.search_edit.text().strip()
             
             # Get logs based on search term if provided, otherwise get recent logs
             if search_term:
@@ -1207,32 +1464,27 @@ class FileOrganizerApp:
                 logs = logger.get_recent_logs(count=100, log_type=log_type)
             
             # Update the log text widget
-            self.log_text.config(state=tk.NORMAL)
-            self.log_text.delete("1.0", tk.END)
+            self.log_text.clear()
             
             if not logs:
-                self.log_text.insert(tk.END, "No log entries found.")
+                self.log_text.append("No log entries found.")
             else:
                 for log in logs:
                     # Add color formatting based on log type
                     if "ERROR:" in log or "Error:" in log:
-                        self.log_text.insert(tk.END, f"{log}\n", "error")
+                        self.log_text.append(f"<span style='color:red;'>{log}</span>")
                     elif "INFO:" in log or "Output:" in log:
-                        self.log_text.insert(tk.END, f"{log}\n", "info")
+                        self.log_text.append(f"<span style='color:blue;'>{log}</span>")
                     else:
-                        self.log_text.insert(tk.END, f"{log}\n")
+                        self.log_text.append(log)
             
-            self.log_text.config(state=tk.DISABLED)
-            
-            # Scroll to the end
-            self.log_text.see(tk.END)
-            
-            # Configure tags for coloring
-            self.log_text.tag_configure("error", foreground="red")
-            self.log_text.tag_configure("info", foreground="blue")
+            # Move cursor to the end
+            cursor = self.log_text.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            self.log_text.setTextCursor(cursor)
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to refresh logs: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to refresh logs: {str(e)}")
             logger.error(f"Error refreshing logs: {str(e)}", exc_info=True)
     
     def _refresh_activity_logs(self):
@@ -1241,47 +1493,40 @@ class FileOrganizerApp:
             logs = logger.get_recent_logs(count=10)
             
             # Update the activity log widget
-            self.activity_log.config(state=tk.NORMAL)
-            self.activity_log.delete("1.0", tk.END)
+            self.activity_log.clear()
             
             if not logs:
-                self.activity_log.insert(tk.END, "No recent activity.")
+                self.activity_log.append("No recent activity.")
             else:
                 for log in logs:
                     # Add color formatting based on log type
                     if "ERROR:" in log or "Error:" in log:
-                        self.activity_log.insert(tk.END, f"{log}\n", "error")
+                        self.activity_log.append(f"<span style='color:red;'>{log}</span>")
                     elif "INFO:" in log or "Output:" in log:
-                        self.activity_log.insert(tk.END, f"{log}\n", "info")
+                        self.activity_log.append(f"<span style='color:blue;'>{log}</span>")
                     else:
-                        self.activity_log.insert(tk.END, f"{log}\n")
+                        self.activity_log.append(log)
             
-            self.activity_log.config(state=tk.DISABLED)
-            
-            # Scroll to the end
-            self.activity_log.see(tk.END)
-            
-            # Configure tags for coloring
-            self.activity_log.tag_configure("error", foreground="red")
-            self.activity_log.tag_configure("info", foreground="blue")
+            # Move cursor to the end
+            cursor = self.activity_log.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            self.activity_log.setTextCursor(cursor)
             
         except Exception as e:
             logger.error(f"Error refreshing activity logs: {str(e)}", exc_info=True)
     
     def _search_logs(self):
         """Search logs for specific text."""
-        search_term = self.search_var.get().strip()
+        search_term = self.search_edit.text().strip()
         if not search_term:
-            messagebox.showinfo("Info", "Please enter a search term.")
+            QMessageBox.information(self, "Info", "Please enter a search term.")
             return
-            
-        self._refresh_logs()  # This will use the search term if provided
+        
+        self._refresh_logs()  # This will use the search term from the search_edit
     
     def _clear_log_display(self):
         """Clear the log display (not the log file)."""
-        self.log_text.config(state=tk.NORMAL)
-        self.log_text.delete("1.0", tk.END)
-        self.log_text.config(state=tk.DISABLED)
+        self.log_text.clear()
     
     def _open_log_file(self):
         """Open the log file in the default text editor."""
@@ -1296,31 +1541,24 @@ class FileOrganizerApp:
                     subprocess.run(["xdg-open", log_path])
                 logger.info(f"Opened log file: {log_path}")
             else:
-                messagebox.showinfo("Info", "Log file does not exist yet.")
+                QMessageBox.information(self, "Info", "Log file does not exist yet.")
         except Exception as e:
-            messagebox.showerror("Error", f"Could not open log file: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Could not open log file: {str(e)}")
             logger.error(f"Error opening log file: {str(e)}", exc_info=True)
 
-# Global variables to be used in on_closing() function
-root = None
-file_watcher = None
-
-def on_closing():
-    """Handle the window close event."""
-    global file_watcher, root
-    logger.info("Shutting down File Organizer application")
-    if file_watcher and file_watcher.running:
-        file_watcher.stop()
-    if root:
-        root.destroy()
+    def closeEvent(self, event):
+        """Handle window close event."""
+        logger.info("Shutting down The Manchester United File Organiser System")
+        if self.file_watcher and self.file_watcher.running:
+            self.file_watcher.stop()
+        event.accept()
 
 # ===============================
 # APPLICATION ENTRY POINT
 # ===============================
 
 def main():
-    global root, file_watcher
-    logger.info("Starting File Organizer application")
+    logger.info("Starting The Manchester United File Organiser System")
     logger.info(f"Application directory: {APP_DIR}")
     
     # Initialize configuration
@@ -1333,34 +1571,25 @@ def main():
     # Initialize file watcher
     file_watcher = FileWatcher(config, file_sorter)
     
+    # Create application
+    app = QApplication(sys.argv)
+    app.setStyle('Fusion')  # Use Fusion style for a more modern look
+    
+    # Set application name and company
+    app.setApplicationName("The Manchester United File Organiser System")
+    app.setOrganizationName("Akhtar Hasan Software Solutions")
+    
+    # Create and show the main window
+    main_window = FileOrganizerApp(config_manager, file_sorter, file_watcher)
+    main_window.show()
+    
     # Start monitoring if enabled
     if config.get('monitoring', {}).get('enabled', False):
         file_watcher.start()
+        main_window._update_monitoring_status()
     
-    return config_manager, file_sorter, file_watcher
+    # Start the application event loop
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
-    # Create the main application window
-    root = tk.Tk()
-    root.title("File Organizer")
-    root.geometry("900x700")
-    
-    # Initialize app components
-    config_manager, file_sorter, file_watcher = main()
-    
-    # Configure style for the app
-    style = ttk.Style()
-    if 'clam' in style.theme_names():
-        style.theme_use('clam')
-    
-    # Create accent button style
-    style.configure("Accent.TButton", font=("", 10, "bold"))
-    
-    # Initialize the application
-    app = FileOrganizerApp(root, config_manager, file_sorter, file_watcher)
-    
-    # Set the close protocol to handle cleanup
-    root.protocol("WM_DELETE_WINDOW", on_closing)
-    
-    # Start the Tkinter main loop
-    root.mainloop()
+    main()
