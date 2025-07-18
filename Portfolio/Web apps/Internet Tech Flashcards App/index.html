@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Technologies Revision</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="flashcard-container">
+        <div class="flashcard" onclick="flipCard()">
+            <div class="front">
+                <h2>Internet Technologies Flashcards Revision</h2>
+                <div id="question-container">
+                    <p id="question">What is the purpose of HTML?</p>
+                </div>
+                <div id="image-container">
+                    <img id="question-image" src="" alt=""/>
+                </div>
+            </div>
+            <div class="back">
+                <div id="answers-container">
+                    <button class="answer-btn" onclick="checkAnswer(1)">Structure of a webpage</button>
+                    <br>
+                    <button class="answer-btn" onclick="checkAnswer(2)">Make webpages interactive</button>
+                    <br>
+                    <button class="answer-btn" onclick="checkAnswer(3)">Create style rules</button>
+                    <br>
+                    <button class="answer-btn" onclick="checkAnswer(4)">None of the above</button>
+                </div>
+                <div id="result"></div>
+            </div>
+        </div>
+        <br>
+        <div id="navigation-buttons">
+            <button id="prev-button" onclick="prevQuestion()">Previous Question</button>
+            <p id="question-num">Q1/25</p>
+            <button id="next-button" onclick="nextQuestion()">Next Question</button>
+        </div>
+        <button id="read-aloud-button" onclick="readAloud()">
+            <img src="speaker-icon.png" alt="Read Aloud" />
+            <p>Read Aloud</p>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

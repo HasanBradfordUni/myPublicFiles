@@ -35,10 +35,13 @@ def synthesize_speech(text, output_file):
     input_text = tts.SynthesisInput(text=text)
     voice = tts.VoiceSelectionParams(
         language_code="en-US",
-        ssml_gender=tts.SsmlVoiceGender.NEUTRAL
+        name="en-US-Wavenet-D",  # Try experimenting with other voices for a more guttural tone
+        ssml_gender=tts.SsmlVoiceGender.MALE
     )
     audio_config = tts.AudioConfig(
-        audio_encoding=tts.AudioEncoding.MP3
+        audio_encoding=tts.AudioEncoding.MP3,
+        pitch=-15.0,  # Lower pitch for a more monstrous tone
+        speaking_rate=0.5  # Slower speech for a powerful, deliberate effect
     )
     response = tts_client.synthesize_speech(
         input=input_text,

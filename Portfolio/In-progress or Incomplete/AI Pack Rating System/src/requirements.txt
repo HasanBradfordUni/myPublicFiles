@@ -1,0 +1,6 @@
+Flask
+Pillow
+requests
+google-cloud-vision
+opencv-python
+flask-cors

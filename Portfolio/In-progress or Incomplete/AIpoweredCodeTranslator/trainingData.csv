@@ -1,30 +1,101 @@
 id;code;python
-1;Add two numbers: multiply the first number by 2 and add the second number;def add_two_numbers(num1; num2):\n\tresult =(num1 * 2) + num2\n\treturn result\n
-2;Check if a given string contains the word ‘apple’;def contains_apple(input_string):\n\treturn 'apple' in input_string\n
-3;Find the maximum value in a list of numbers;def find_max_value(numbers):\n\treturn max(numbers)\n
-4;Calculate the area of a rectangle with width 5 and height 8;def calculate_rectangle_area(width; height):\n\treturn width * height\n
-5;Create a dictionary with keys ‘name’, ‘age’, and ‘city’. Assign values ‘John’, 30, and ‘New York’ respectively;def create_person_info():\n\tperson_info = {'name': 'John','age': 30,'city': 'New York'}\n\treturn person_info\n
-6;Count the number of vowels in a given string;def count_vowels(input_string):\n\tvowels = 'aeiouAEIOU'\n\treturn sum(1 for char in input_string if char in vowels)\n
-7;Reverse a list of integers;def reverse_list(numbers):\n\treturn numbers[::-1]\n
-8;Check if a given year is a leap year;def is_leap_year(year):\n\treturn (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)\n
-9;Calculate the factorial of a non-negative integer;def factorial(n):\n\tif n == 0:\n\t\treturn 1\n\telse:\n\t\treturn n * factorial(n - 1)\n
-10;Find the common elements between two lists;def find_common_elements(list1, list2):\n\treturn list(set(list1) & set(list2))\n
-11;Calculate the average of a list of numbers;\ndef calculate_average(numbers):\n\treturn sum(numbers) / len(numbers)\n
-12;Check if a given string is a palindrome;\ndef is_palindrome(input_string):\n\tcleaned_string = input_string.lower().replace(' ', '')\n\treturn cleaned_string == cleaned_string[::-1]\n
-13;Convert a temperature in Celsius to Fahrenheit;\ndef celsius_to_fahrenheit(celsius):\n\treturn (celsius * 9/5) + 32\n
-14;Find the second largest element in a list;\ndef find_second_largest(numbers):\n\tsorted_numbers = sorted(numbers)\n\treturn sorted_numbers[-2]\n
-15;Remove duplicates from a list;\ndef remove_duplicates(input_list):\n\treturn list(set(input_list))\n
-16;Calculate the average of a list of numbers;def calculate_average(numbers):\n\treturn sum(numbers) / len(numbers)\n
-17;Check if a given string is a palindrome;def is_palindrome(input_string):\n\tcleaned_string = input_string.lower().replace(' ', '')\n\treturn cleaned_string == cleaned_string[::-1]\n
-18;Convert a temperature in Celsius to Fahrenheit;def celsius_to_fahrenheit(celsius):\n\treturn (celsius * 9/5) + 32\n
-19;Find the second largest element in a list;def find_second_largest(numbers):\n\tsorted_numbers = sorted(numbers)\n\treturn sorted_numbers[-2]\n
-20;Remove duplicates from a list;def remove_duplicates(input_list):\n\treturn list(set(input_list))\n
-    
-
-
-
-
-
-
-
-
+1;Add two numbers: multiply the first number by 2 and add the second number;def add_two_numbers(num1, num2):/n/tresult =(num1 * 2) + num2/n/treturn result/n
+2;Check if a given string contains the word ‘apple’;def contains_apple(input_string):/n/treturn 'apple' in input_string/n
+3;Find the maximum value in a list of numbers;def find_max_value(numbers):/n/treturn max(numbers)/n
+4;Calculate the area of a rectangle with width 5 and height 8;def calculate_rectangle_area(width, height):/n/treturn width * height/n
+5;Create a dictionary with keys ‘name’, ‘age’, and ‘city’. Assign values ‘John’, 30, and ‘New York’ respectively;def create_person_info():/n/tperson_info = {'name': 'John','age': 30,'city': 'New York'}/n/treturn person_info/n
+6;Count the number of vowels in a given string;def count_vowels(input_string):/n/tvowels = 'aeiouAEIOU'/n/treturn sum(1 for char in input_string if char in vowels)/n
+7;Reverse a list of integers;def reverse_list(numbers):/n/treturn numbers[::-1]/n
+8;Check if a given year is a leap year;def is_leap_year(year):/n/treturn (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)/n
+9;Calculate the factorial of a non-negative integer;def factorial(n):/n/tif n == 0:/n/t/treturn 1/n/telse:/n/t/treturn n * factorial(n - 1)/n
+10;Find the common elements between two lists;def find_common_elements(list1, list2):/n/treturn list(set(list1) & set(list2))/n
+11;Calculate the average of a list of numbers;def calculate_average(numbers):/n/treturn sum(numbers) / len(numbers)/n
+12;Check if a given string is a palindrome;def is_palindrome(input_string):/n/tcleaned_string = input_string.lower().replace(' ', '')/n/treturn cleaned_string == cleaned_string[::-1]/n
+13;Convert a temperature in Celsius to Fahrenheit;def celsius_to_fahrenheit(celsius):/n/treturn (celsius * 9/5) + 32/n
+14;Find the second largest element in a list;def find_second_largest(numbers):/n/tsorted_numbers = sorted(numbers)/n/treturn sorted_numbers[-2]/n
+15;Remove duplicates from a list;def remove_duplicates(input_list):/n/treturn list(set(input_list))/n
+16;Calculate the average of a list of numbers;def calculate_average(numbers):/n/treturn sum(numbers) / len(numbers)/n
+17;Check if a given string is a palindrome;def is_palindrome(input_string):/n/tcleaned_string = input_string.lower().replace(' ', '')/n/treturn cleaned_string == cleaned_string[::-1]/n
+18;Convert a temperature in Celsius to Fahrenheit;def celsius_to_fahrenheit(celsius):/n/treturn (celsius * 9/5) + 32/n
+19;Find the second largest element in a list;def find_second_largest(numbers):/n/tsorted_numbers = sorted(numbers)/n/treturn sorted_numbers[-2]/n
+20;Remove duplicates from a list;def remove_duplicates(input_list):/n/treturn list(set(input_list))/n
+21;Find the sum of all even numbers in a list;def sum_even_numbers(numbers):/n/treturn sum(num for num in numbers if num % 2 == 0)/n
+22;Check if a number is prime;def is_prime(n):/n/tif n < 2:/n/t/treturn False/n/tfor i in range(2, int(n**0.5) + 1):/n/t/tif n % i == 0:/n/t/t/treturn False/n/treturn True/n
+23;Merge two dictionaries into one;def merge_dictionaries(dict1, dict2):/n/treturn {**dict1, **dict2}/n
+24;Find the length of the longest word in a given sentence;def longest_word_length(sentence):/n/treturn max(len(word) for word in sentence.split())/n
+25;Check if a number is a perfect square;def is_perfect_square(n):/n/treturn int(n**0.5) ** 2 == n/n
+26;Convert a string to title case;def to_title_case(text):/n/treturn text.title()/n
+27;Generate the first n Fibonacci numbers;def fibonacci(n):/n/tfib_sequence = [0, 1]/n/tfor _ in range(n - 2):/n/t/tfib_sequence.append(fib_sequence[-1] + fib_sequence[-2])/n/treturn fib_sequence[:n]/n
+28;Find the intersection of two sets;def set_intersection(set1, set2):/n/treturn set1 & set2/n
+29;Check if a string is an anagram of another;def is_anagram(str1, str2):/n/treturn sorted(str1) == sorted(str2)/n
+30;Calculate the greatest common divisor (GCD) of two numbers;def gcd(a, b):/n/twhile b:/n/t/ta, b = b, a % b/n/treturn a/n
+31;Find the least common multiple (LCM) of two numbers;def lcm(a, b):/n/treturn abs(a * b) // gcd(a, b)/n
+32;Convert a list of strings to uppercase;def to_uppercase(strings):/n/treturn [s.upper() for s in strings]/n
+33;Find the difference between two sets;def set_difference(set1, set2):/n/treturn set1 - set2/n
+34;Find the union of two sets;def set_union(set1, set2):/n/treturn set1 | set2/n
+35;Capitalize the first letter of each word in a string;def capitalize_words(text):/n/treturn ' '.join(word.capitalize() for word in text.split())/n
+36;Flatten a nested list;def flatten_list(nested_list):/n/treturn [item for sublist in nested_list for item in sublist]/n
+37;Generate a random number between 1 and 100;import random/n/ndef random_number():/n/treturn random.randint(1, 100)/n
+38;Check if a given number is even or odd;def is_even(n):/n/treturn n % 2 == 0/n
+39;Remove all whitespace from a string;def remove_whitespace(text):/n/treturn text.replace(' ', '')/n
+40;Sort a list of dictionaries by a specific key;def sort_dicts_by_key(dicts, key):/n/treturn sorted(dicts, key=lambda x: x[key])/n
+41;Find the square root of a number;import math/n/ndef square_root(n):/n/treturn math.sqrt(n)/n
+42;Convert a list of integers to a comma-separated string;def list_to_string(numbers):/n/treturn ', '.join(map(str, numbers))/n
+43;Find the most frequent element in a list;from collections import Counter/n/ndef most_frequent(numbers):/n/treturn Counter(numbers).most_common(1)[0][0]/n
+44;Generate a list of even numbers up to n;def generate_evens(n):/n/treturn [i for i in range(n+1) if i % 2 == 0]/n
+45;Remove punctuation from a string;import string/n/ndef remove_punctuation(text):/n/treturn text.translate(str.maketrans('', '', string.punctuation))/n
+46;Find the sum of digits of a number;def sum_digits(n):/n/treturn sum(int(digit) for digit in str(n))/n
+47;Calculate the power of a number;def power(base, exponent):/n/treturn base ** exponent/n
+48;Check if all elements in a list are unique;def all_unique(lst):/n/treturn len(lst) == len(set(lst))/n
+49;Reverse a string;def reverse_string(text):/n/treturn text[::-1]/n
+50;Count the occurrences of each word in a string;from collections import Counter/n/ndef word_count(text):/n/treturn Counter(text.split())/n
+51;Find the median of a list of numbers;import statistics/n/ndef find_median(numbers):/n/treturn statistics.median(numbers)/n
+52;Get the ASCII value of a character;def ascii_value(char):/n/treturn ord(char)/n
+53;Find all divisors of a number;def find_divisors(n):/n/treturn [i for i in range(1, n+1) if n % i == 0]/n
+54;Generate a list of n random numbers;import random/n/ndef random_numbers(n):/n/treturn [random.randint(1, 100) for _ in range(n)]/n
+55;Swap the values of two variables;def swap(a, b):/n/treturn b, a/n
+56;Find the sum of squares of a list of numbers;def sum_of_squares(numbers):/n/treturn sum(x**2 for x in numbers)/n
+57;Convert a decimal number to binary;def decimal_to_binary(n):/n/treturn bin(n)[2:]/n
+58;Convert a decimal number to hexadecimal;def decimal_to_hex(n):/n/treturn hex(n)[2:]/n
+59;Convert a decimal number to octal;def decimal_to_octal(n):/n/treturn oct(n)[2:]/n
+60;Check if a list is sorted in ascending order;def is_sorted(lst):/n/treturn lst == sorted(lst)/n
+61;Generate a list of prime numbers up to n;def generate_primes(n):/n/tprimes = []/n/tfor num in range(2, n+1):/n/t/tif all(num % p != 0 for p in primes):/n/t/t/tprimes.append(num)/n/treturn primes/n
+62;Calculate the sum of all elements in a nested list;def sum_nested_list(nested_list):/n/treturn sum(sum(sublist) for sublist in nested_list)/n
+63;Find the first non-repeating character in a string;from collections import Counter/n/ndef first_unique_char(text):/n/tcounts = Counter(text)/n/tfor char in text:/n/t/tif counts[char] == 1:/n/t/t/treturn char/n/treturn None/n
+64;Check if a number is a power of two;def is_power_of_two(n):/n/treturn n > 0 and (n & (n - 1)) == 0/n
+65;Find the longest palindrome substring in a given string;def longest_palindrome_substring(s):/n/tlongest = ''/n/tfor i in range(len(s)):/n/t/tfor j in range(i, len(s)):/n/t/t/tsub = s[i:j+1]/n/t/t/tif sub == sub[::-1] and len(sub) > len(longest):/n/t/t/t/tlongest = sub/n/treturn longest/n
+66;Find the number of occurrences of a substring in a string;def count_substring(text, substring):/n/treturn text.count(substring)/n
+67;Check if a string contains only digits;def is_digit_only(text):/n/treturn text.isdigit()/n
+68;Convert a list of Booleans to integers;def bools_to_ints(bools):/n/treturn [int(b) for b in bools]/n
+69;Get the last n elements of a list;def last_n_elements(lst, n):/n/treturn lst[-n:]/n
+70;Replace all vowels in a string with '*';def replace_vowels(text):/n/tvowels = 'aeiouAEIOU'/n/treturn ''.join('*' if char in vowels else char for char in text)/n
+71;Rotate a list to the right by k positions;def rotate_list(lst, k):/n/tk %= len(lst)/n/treturn lst[-k:] + lst[:-k]/n
+72;Find the longest word in a list;def longest_word(words):/n/treturn max(words, key=len)/n
+73;Find the first duplicate in a list;def first_duplicate(lst):/n/tseen = set()/n/tfor num in lst:/n/t/tif num in seen:/n/t/t/treturn num/n/t/tseen.add(num)/n/treturn None/n
+74;Get the first n elements of a list;def first_n_elements(lst, n):/n/treturn lst[:n]/n
+75;Check if a list contains another list;def contains_sublist(lst, sublist):/n/treturn any(lst[i:i+len(sublist)] == sublist for i in range(len(lst) - len(sublist) + 1))/n
+76;Find the index of the first occurrence of an element in a list;def find_index(lst, element):/n/treturn lst.index(element) if element in lst else -1/n
+77;Check if a given string contains only uppercase letters;def is_uppercase(text):/n/treturn text.isupper()/n
+78;Check if a given string contains only lowercase letters;def is_lowercase(text):/n/treturn text.islower()/n
+79;Convert a binary string to a decimal number;def binary_to_decimal(binary_str):/n/treturn int(binary_str, 2)/n
+80;Convert a hexadecimal string to a decimal number;def hex_to_decimal(hex_str):/n/treturn int(hex_str, 16)/n
+81;Convert an octal string to a decimal number;def octal_to_decimal(octal_str):/n/treturn int(octal_str, 8)/n
+82;Calculate the absolute difference between two numbers;def absolute_difference(a, b):/n/treturn abs(a - b)/n
+83;Find the smallest element in a list;def find_min(numbers):/n/treturn min(numbers)/n
+84;Convert a list of characters into a string;def chars_to_string(chars):/n/treturn ''.join(chars)/n
+85;Shuffle a list randomly;import random/n/ndef shuffle_list(lst):/n/trandom.shuffle(lst)/n/treturn lst/n
+86;Repeat a string n times;def repeat_string(text, n):/n/treturn text * n/n
+87;Find the longest common prefix of a list of strings;import os/n/ndef longest_common_prefix(strings):/n/treturn os.path.commonprefix(strings)/n
+88;Count how many times each character appears in a string;from collections import Counter/n/ndef char_frequencies(text):/n/treturn dict(Counter(text))/n
+89;Find the largest prime factor of a number;def largest_prime_factor(n):/n/ti = 2/n/twhile i * i <= n:/n/t/tif n % i:/n/t/t/ti += 1/n/t/telse:/n/t/t/tn //= i/n/treturn n/n
+90;Interleave two lists into one;def interleave_lists(lst1, lst2):/n/treturn [item for pair in zip(lst1, lst2) for item in pair]/n
+91;Find all substrings of a given string;def all_substrings(text):/n/treturn [text[i:j+1] for i in range(len(text)) for j in range(i, len(text))]/n
+92;Check if a given number is a palindrome;def is_numeric_palindrome(n):/n/treturn str(n) == str(n)[::-1]/n
+93;Find the longest increasing subsequence in a list;from itertools import combinations/n/ndef longest_increasing_subsequence(lst):/n/tfor length in range(len(lst), 0, -1):/n/t/tfor subseq in combinations(lst, length):/n/t/t/tif list(subseq) == sorted(subseq):/n/t/t/t/treturn list(subseq)/n/treturn []/n
+94;Reverse the words in a sentence;def reverse_words(sentence):/n/treturn ' '.join(sentence.split()[::-1])/n
+95;Calculate the sum of the first n natural numbers;def sum_natural_numbers(n):/n/treturn n * (n + 1) // 2/n
+96;Check if a string contains any digits;def contains_digit(text):/n/treturn any(char.isdigit() for char in text)/n
+97;Find the longest consecutive sequence in a list of numbers;def longest_consecutive_sequence(numbers):/n/tnum_set, longest = set(numbers), 0/n/tfor num in numbers:/n/t/tif num - 1 not in num_set:/n/t/t/tlength = 1/n/t/t/twhile num + length in num_set:/n/t/t/t/tlength += 1/n/t/t/tlongest = max(longest, length)/n/treturn longest/n
+98;Convert a string to a list of words;def string_to_words(text):/n/treturn text.split()/n
+99;Remove all None values from a list;def remove_none_values(lst):/n/treturn [x for x in lst if x is not None]/n
+100;Find the Hamming distance between two strings;def hamming_distance(str1, str2):/n/treturn sum(c1 != c2 for c1, c2 in zip(str1, str2)) if len(str1) == len(str2) else -1/n

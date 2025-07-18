@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pack Analysis Results</h1>
+        <div class="results">
+            <h2>Pack Rating: {{ pack_rating }}%</h2>
+            <h3>Total Value: ${{ total_value }}</h3>
+            <h3>Expected Value: ${{ expected_value }}</h3>
+            <h4>Card Details:</h4>
+            <ul>
+                {% for card in card_details %}
+                    <li>{{ card.name }} - ${{ card.value }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <a href="{{ url_for('index') }}">Analyze Another Pack</a>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

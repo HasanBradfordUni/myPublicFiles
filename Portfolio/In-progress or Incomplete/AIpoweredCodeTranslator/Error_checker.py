@@ -9,8 +9,8 @@ def check_syntax(filename):
 
 def error_checker_main():
     parsing_error = False
-    errors = check_syntax('translated_code.py')
-    with open("translated_code.py", "r") as file:
+    errors = check_syntax('Translated Code/translated_code.py')
+    with open("Translated Code/translated_code.py", "r") as file:
         oldCode = file.readlines()
         print("Old Code:", oldCode)
 
@@ -26,6 +26,7 @@ def error_checker_main():
     notImported = True
 
     for error in errors:
+        print(error)
         error = error.split("\n")
         for line in error:
             splitLine = line.split(":")
@@ -54,7 +55,7 @@ def error_checker_main():
                 break
 
     print("New Code:", oldCode)
-    file = open("translated_code.py", "w")
+    file = open("Translated Code/translated_code0.py", "w")
     for code in oldCode:
         file.write(code)
     file.close()

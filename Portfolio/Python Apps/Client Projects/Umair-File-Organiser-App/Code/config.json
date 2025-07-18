@@ -1,0 +1,33 @@
+{
+    "source_directory": "C:/Users/fifau/Old laptop",
+    "destination_directory": "",
+    "file_action": "move",
+    "monitoring": {
+        "enabled": true,
+        "type": "realtime",
+        "interval": 300
+    },
+    "sorting_rules": {
+        "extensions": {
+            "docx": "Downloaded Word Docs",
+            "xlsx": "Downloaded Spreadsheets",
+            "jpg": "Downloaded Images",
+            "png": "Downloaded Images",
+            "mp3": "Downloaded Audios",
+            "mp4": "Old Vids",
+            "py": "Python & Plaintext",
+            "txt": "Python & Plaintext",
+            "wav": "Downloaded Audios",
+            "jpeg": "Downloaded Images",
+            "webp": "Downloaded Images",
+            "mpeg": "Old Vids",
+            "js": "Javascript",
+            "zip": "Zips"
+        },
+        "patterns": {
+            "invoice": "Documents/Invoices",
+            "receipt": "Documents/Receipts"
+        },
+        "other": "Other Files"
+    }
+}

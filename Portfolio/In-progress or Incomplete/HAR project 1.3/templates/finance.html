@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Fulcrum - Finance Options</title>
+</head>
+<body>
+  <div class="container">
+    {% extends "base.html" %}
+
+    {% block title %}Finance Options - Finance Fulcrum{% endblock %}
+
+    {% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Add Transaction</h5>
+                </div>
+                <div class="card-body">
+                    <form id="transactionForm">
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-control" id="type" name="type" required>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount</label>
+                            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note" class="form-label">Note (Optional)</label>
+                            <input type="text" class="form-control" id="note" name="note">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Transaction</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Generate Report</h5>
+                </div>
+                <div class="card-body">
+                    <form id="reportForm">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">Generate Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Finance Overview</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadFinanceData()">Refresh</button>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6>Balance</h6>
+                                <h4 id="balance" class="text-primary">$0.00</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6>Total Income</h6>
+                                <h4 id="totalIncome" class="text-success">$0.00</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h6>Total Expenses</h6>
+                                <h4 id="totalExpenses" class="text-danger">$0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="transactionHistory">
+                        <h6>Transaction History</h6>
+                        <div id="historyList" class="mt-3">
+                            <!-- Transaction history will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div id="reportOutput" class="mt-4" style="display: none;">
+                        <h6>Report</h6>
+                        <div id="reportContent">
+                            <!-- Report content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Set today's date as default
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('end_date').valueAsDate = new Date();
+
+    // Set start date to beginning of current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('start_date').valueAsDate = firstDay;
+
+    // Load initial data
+    loadFinanceData();
+    </script>
+    {% endblock %}
+  </div>
+</body>
+</html>

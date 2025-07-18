@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Pack Value Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Ultimate Pack Value Analyzer</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <label for="pack-type">Select Pack Type:</label>
+            <select id="pack-type" name="pack-type" required>
+                <option value="">--Select Pack Type--</option>
+                <option value="standard">Standard Pack</option>
+                <option value="rare">Rare Pack</option>
+                <option value="mega">Mega Pack</option>
+                <option value="ultimate">Ultimate Pack</option>
+            </select>
+            <label for="image-upload">Upload Pack Screenshot:</label>
+            <input type="file" id="image-upload" name="image-upload" accept="image/*" multiple required>
+            <button type="submit">Analyze Pack</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
