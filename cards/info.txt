@@ -1,0 +1,1 @@
+Fifa Card Images are in this folder, used for the "Guess the FIFA Card Type" Quiz App 
