@@ -1,37 +1,23 @@
 // --- Configuration -----------------------------------------------------------
 const CONFIG = {
-  OWNER: "HasanBradfordUni",           // GitHub username
-  REPO: "myPublicFiles",               // Repository name
-  BRANCH: "main",                      // Branch GitHub Pages is publishing from
-  CARDS_PATH: "cards",                 // Path to your folder containing card images
-  CACHE_TTL_MS: 6 * 60 * 60 * 1000     // 6-hour cache timeout for API results
+  OWNER: "HasanBradfordUni",
+  REPO: "myPublicFiles",
+  BRANCH: "main",
+  CARDS_PATH: "cards",
+  CACHE_TTL_MS: 6 * 60 * 60 * 1000
 };
 
-// Optional: force using GitHub API download_url for images (usually not needed)
-// If false, images are loaded from your Pages site via relative paths (faster).
 const USE_DOWNLOAD_URLS = false;
 
-// --- Helpers: repo detection and API URL ------------------------------------
-function detectRepoContext() {
-  const host = window.location.hostname;
-  const pathParts = window.location.pathname.split("/").filter(Boolean);
-  const m = host.match(/^([^.]+)\.github\.io$/);
-  const owner = CONFIG.OWNER || (m ? m[1] : null);
-  // On project pages, first path segment is repo; on user/org pages it's absent.
-  const repo = CONFIG.REPO || (m && pathParts.length ? pathParts[0] : null);
-  const branch = CONFIG.BRANCH || "main";
-  return { owner, repo, branch };
-}
-
+// --- Helpers -----------------------------------------------------------------
 function ghContentsUrl(owner, repo, cardsPath, branch) {
   const encPath = encodeURIComponent(cardsPath).replace(/%2F/g, "/");
   const encRef = encodeURIComponent(branch);
   return `https://api.github.com/repos/${owner}/${repo}/contents/${encPath}?ref=${encRef}`;
 }
 
-// --- Storage cache -----------------------------------------------------------
-function cacheKey({ owner, repo, branch }, path) {
-  return `cards_manifest::${owner || "?"}::${repo || "?"}::${branch}::${path}`;
+function cacheKey(path) {
+  return `cards_manifest::${CONFIG.OWNER}::${CONFIG.REPO}::${CONFIG.BRANCH}::${path}`;
 }
 
 function readCache(key, ttlMs) {
@@ -50,36 +36,24 @@ function readCache(key, ttlMs) {
 function writeCache(key, items) {
   try {
     localStorage.setItem(key, JSON.stringify({ ts: Date.now(), items }));
-  } catch {
-    // ignore quota errors
-  }
+  } catch {}
 }
 
 function clearCache(key) {
   try { localStorage.removeItem(key); } catch {}
 }
 
-// --- Filename utilities ------------------------------------------------------
 function baseName(path) {
   const f = path.split("/").pop();
   return f.replace(/\.[a-z0-9]+$/i, "");
 }
 
 function normalize(s) {
-  return String(s)
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/[^a-z0-9 ]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(s).toLowerCase().replace(/[_-]+/g, " ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function titleCase(s) {
-  return s
-    .split(" ")
-    .filter(Boolean)
-    .map(w => w[0] ? w[0].toUpperCase() + w.slice(1) : w)
-    .join(" ");
+  return s.split(" ").filter(Boolean).map(w => w[0] ? w[0].toUpperCase() + w.slice(1) : w).join(" ");
 }
 
 function isImageName(name) {
@@ -88,31 +62,21 @@ function isImageName(name) {
 
 // --- Fetch folder listing from GitHub ---------------------------------------
 async function fetchCardFilenames() {
-  const ctx = detectRepoContext();
-  const { owner, repo, branch } = ctx;
+  const infoEl = document.getElementById("info");
+  infoEl.textContent = `${CONFIG.OWNER}/${CONFIG.REPO}@${CONFIG.BRANCH} • ${CONFIG.CARDS_PATH}`;
 
-  const infoEl = document.getElementById("sourceInfo");
-  if (!owner || !repo) {
-    infoEl.textContent = "Set OWNER/REPO in app.js (auto-detect failed).";
-  } else {
-    infoEl.textContent = `${owner}/${repo}@${branch} • ${CONFIG.CARDS_PATH}`;
-  }
-
-  const cKey = cacheKey(ctx, CONFIG.CARDS_PATH);
+  const cKey = cacheKey(CONFIG.CARDS_PATH);
   const cached = readCache(cKey, CONFIG.CACHE_TTL_MS);
   if (cached && cached.length) return cached;
 
-  if (!owner || !repo) throw new Error("Missing owner or repo to query GitHub API.");
-
-  const url = ghContentsUrl(owner, repo, CONFIG.CARDS_PATH, branch);
+  const url = ghContentsUrl(CONFIG.OWNER, CONFIG.REPO, CONFIG.CARDS_PATH, CONFIG.BRANCH);
   const resp = await fetch(url, {
     headers: { "Accept": "application/vnd.github.v3+json" }
   });
-  if (!resp.ok) {
-    throw new Error(`GitHub API error ${resp.status}`);
-  }
+  if (!resp.ok) throw new Error(`GitHub API error ${resp.status}`);
   const json = await resp.json();
   if (!Array.isArray(json)) throw new Error("Unexpected API response.");
+
   const files = json
     .filter(item => item && item.type === "file" && isImageName(item.name))
     .map(item => ({
@@ -126,7 +90,7 @@ async function fetchCardFilenames() {
 }
 
 // --- UI/Quiz logic -----------------------------------------------------------
-const IMG_BASE = "cards/"; // used when not using download_url
+const IMG_BASE = "cards/";
 const imgEl = document.getElementById("cardImage");
 const loadingEl = document.getElementById("loading");
 const scoreEl = document.getElementById("score");
@@ -137,9 +101,9 @@ const feedbackEl = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const resetBtn = document.getElementById("resetBtn");
 
-let ORDER = [];     // array of filenames or full URLs
+let ORDER = [];
 let IDX = 0;
-let ATTEMPTED = 0;  // completed cards
+let ATTEMPTED = 0;
 let CORRECT = 0;
 let ANSWERED = false;
 let LAST_OK = false;
@@ -170,7 +134,6 @@ function showFeedback(isCorrect, expected) {
 }
 
 function currentDisplayName(entry) {
-  // entry is either "filename.ext" or a full download_url
   const name = entry.includes("://")
     ? entry.split("/").pop().split("?")[0]
     : entry;
@@ -192,9 +155,7 @@ async function startGame() {
     inputEl.disabled = true;
 
     const items = await fetchCardFilenames();
-    if (!items.length) {
-      throw new Error("No image files found in cards folder.");
-    }
+    if (!items.length) throw new Error("No image files found in cards folder.");
 
     ORDER = shuffle(items);
     IDX = 0; ATTEMPTED = 0; CORRECT = 0; ANSWERED = false; LAST_OK = false;
@@ -211,8 +172,7 @@ async function startGame() {
     loadingEl.style.display = "none";
     clearFeedback();
     feedbackEl.className = "feedback show nope";
-    feedbackEl.textContent = `Couldn't load cards automatically: ${err.message}. 
-You can set OWNER/REPO/BRANCH in app.js or try again.`;
+    feedbackEl.textContent = `Couldn't load cards automatically: ${err.message}.`;
     console.error(err);
   }
 }
@@ -264,12 +224,10 @@ nextBtn.addEventListener("click", () => {
 });
 
 resetBtn.addEventListener("click", () => {
-  const ctx = detectRepoContext();
-  clearCache(cacheKey(ctx, CONFIG.CARDS_PATH));
+  clearCache(cacheKey(CONFIG.CARDS_PATH));
   startGame();
 });
 
-// Enter key goes Next after answering
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && ANSWERED && !nextBtn.disabled) {
     e.preventDefault();
@@ -277,5 +235,4 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Boot
 startGame();
