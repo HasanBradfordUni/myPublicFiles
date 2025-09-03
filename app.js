@@ -63,7 +63,7 @@ function isImageName(name) {
 // --- Fetch folder listing from GitHub ---------------------------------------
 async function fetchCardFilenames() {
   const infoEl = document.getElementById("info");
-  infoEl.textContent = `${CONFIG.OWNER}/${CONFIG.REPO}@${CONFIG.BRANCH} • ${CONFIG.CARDS_PATH}`;
+  console.log(`${CONFIG.OWNER}/${CONFIG.REPO}@${CONFIG.BRANCH} • ${CONFIG.CARDS_PATH}`);
 
   const cKey = cacheKey(CONFIG.CARDS_PATH);
   const cached = readCache(cKey, CONFIG.CACHE_TTL_MS);
