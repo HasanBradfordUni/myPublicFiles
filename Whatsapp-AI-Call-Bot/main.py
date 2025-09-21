@@ -3,6 +3,7 @@ from fastapi.responses import PlainTextResponse
 import os, datetime, json
 from dotenv import load_dotenv
 from geminiPrompt import process_user_message
+import requests
 
 load_dotenv()
 app = FastAPI()
@@ -58,4 +59,28 @@ def respond_as_king_kong(text, sender):
 
     response_text = process_user_message(input_audio_path, output_audio_path)
     print(f"King Kong says: {response_text}")
-    # You can send this response back via WhatsApp or store it for playback
+
+    send_whatsapp_message(sender, response_text)
+
+def send_whatsapp_message(recipient_number, message_text):
+    phone_number_id = os.getenv("699760716561335")
+    access_token = os.getenv("EAAYZChY2VuvoBPJU2SuaTmVf9wyCn4G7n9MDDfop2jHvkg4xjZBlEdVZCZCESEjwVSF261tKusiUoE7kvMOgNPbgF4ELk0FTyHkofHVsbYctDrW4cpoZB0vxxCs1khX8sHxCIfq0G4WYcjvjX93IYkRlZAkMz4j8cO7gFaPDBuhz7yaMzofJNxx3ZB11C4fyZAHgAmdZBaBujZAciP")
+
+    url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": recipient_number,
+        "type": "text",
+        "text": {
+            "body": message_text
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    print("WhatsApp API response:", response.status_code, response.text)
+
+
