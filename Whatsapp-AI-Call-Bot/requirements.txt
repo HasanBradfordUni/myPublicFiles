@@ -1,3 +1,7 @@
 fastapi
 uvicorn
 python-dotenv
+pydub
+openai
+elevenlabs
+google-generativeai
