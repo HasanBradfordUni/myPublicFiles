@@ -5,3 +5,4 @@ pydub
 openai
 elevenlabs
 google-generativeai
+pyaudioop
