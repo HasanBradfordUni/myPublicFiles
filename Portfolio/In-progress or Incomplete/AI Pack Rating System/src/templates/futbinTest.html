@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FUTBIN Price Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f4f6f9;
+      color: #333;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #0078ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005ecb;
+    }
+    #results {
+      margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 FUTBIN Player Price Lookup</h1>
+
+  <label>Player Name:</label>
+  <input type="text" id="player-name" placeholder="e.g. Mbappe" />
+  <select id="platform">
+    <option value="pc">PC</option>
+    <option value="ps">PlayStation</option>
+    <option value="xbox">Xbox</option>
+  </select>
+  <button onclick="getPlayerPrice()">Get Price</button>
+
+  <div id="results"></div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

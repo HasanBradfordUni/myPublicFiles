@@ -1,0 +1,60 @@
+#card_type,#hex
+Non Rare Bronze,#dfa67e
+Non Rare Silver,#a9acb4
+Non Rare Gold,#dcc386
+Rare Bronze,#cd8d66
+Rare Silver,#979ba4
+Rare Gold,#cba75f
+TOTW Gold,#1d1a12
+TOTY,#162d5d
+TOTY Nominee,#265bb2
+Future Stars,#6557f5
+FUT Champs,#a02a31
+Ultimate Scream,#cc653e
+Icon,#e3e1e1
+Man of the Match,#974a01
+Flashback,#1e86c8
+End of an Era,#7818f6
+UCL RTTK,#000067
+UCL RTTF,#0443c7
+Player Moments,#61bb7a
+Europa League,#c83802
+Conference League,#00610a
+Bundesliga POTM,#b00410
+Premier League POTM,#25c0ff
+Ligue 1 POTM,#085fff
+La Liga POTM,#36394a
+Serie A POTM,#2b00e5
+FUT Birthday,#9c67f0
+Birthday Icon,#f4a8e4
+Birthday Hero,#b7316a
+TOTS,#3a5ca3
+TOTS Breakthrough,#573081
+Winter Wildcards,#31492e
+Winter Wildcard SBC,#8f3536
+Winter Wildcard Icon,#cfcec1
+FUT Fantasy,#cea8eb
+Fantasy Hero,#1f3565
+Fantasy Icon,#c99b89
+Showdown Boost,#586813
+Hero,#3c2d63
+Evolutions,#162d27
+FC Pro,#603cb1
+FC Pro Icon,#937ad1
+Thunderstruck,#27232a
+Thunderstruck Icon,#c8c6c5
+Joga Bonito,#5bd71a
+UCL Primetime Hero,#003dbc
+World Tour,#f99b26
+Cornerstones,#915524
+Rating Reload,#b39258
+FOF Captains,#bf226f
+Unbreakables,#541f59
+Unbreakables Icon,#a16696
+Time Warp,#643580
+Time Warp Icon,#fdeff8
+Knockout Royalty,#8d2b25
+Knockout Royalty Icon,#a99686
+Knockout Royalty Hero,#592958
+Answer the Call,#1d346a
+Trophy Titans,#4f351c

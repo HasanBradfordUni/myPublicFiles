@@ -13,13 +13,33 @@
             <label for="pack-type">Select Pack Type:</label>
             <select id="pack-type" name="pack-type" required>
                 <option value="">--Select Pack Type--</option>
-                <option value="standard">Standard Pack</option>
-                <option value="rare">Rare Pack</option>
-                <option value="mega">Mega Pack</option>
-                <option value="ultimate">Ultimate Pack</option>
+                <!-- Options will be populated by JavaScript -->
             </select>
+            <br>
             <label for="image-upload">Upload Pack Screenshot:</label>
             <input type="file" id="image-upload" name="image-upload" accept="image/*" multiple required>
+            <br>
+            <label for="platform">Platform</label>
+            <select id="platform" name="platform">
+              <option value="auto" selected>Auto Detect</option>
+              <option value="pc">PC / Web App</option>
+              <option value="console">Console (PS/Xbox layout)</option>
+              <option value="mobile">Mobile Companion</option>
+              <option value="ps">PlayStation Market</option>
+              <option value="xbox">Xbox Market</option>
+            </select>
+            <br>
+            <label for="game-year">Game Year</label>
+            <select id="game-year" name="game-year" required>
+              <option value="fifa20">FIFA 20</option>
+              <option value="fifa21">FIFA 21</option>
+              <option value="fifa22">FIFA 22</option>
+              <option value="fifa23">FIFA 23</option>
+              <option value="fc24">FC 24</option>
+              <option value="fc25">FC 25</option>
+              <option value="fc26" selected>FC 26</option>
+            </select>
+            <br>
             <button type="submit">Analyze Pack</button>
         </form>
         <div id="result"></div>
